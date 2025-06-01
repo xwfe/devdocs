@@ -4,8 +4,7 @@
 //! 参考文件: lib/docs/scrapers/mdn/css.rb
 
 use crate::core::error::Result;
-use crate::core::filters::{HtmlCleanerFilter, UrlNormalizerFilter};
-use crate::core::scraper::{Scraper as CoreScraper, UrlScraper};
+use crate::core::scraper::base::{Scraper, UrlScraper};
 use async_trait::async_trait;
 
 /// CSS文档爬虫
@@ -27,26 +26,15 @@ impl CssScraper {
             "/Selectors".to_string(),
         ];
 
-        // 创建过滤器
-        let html_cleaner = Box::new(
-            HtmlCleanerFilter::new()
-                .with_remove_tag("footer")
-                .with_remove_tag("nav"),
-        );
-        let url_normalizer = Box::new(UrlNormalizerFilter::new(base_url, "/docs/css/"));
-
-        // 添加过滤器和初始路径
-        scraper = scraper
-            .with_initial_paths(initial_paths)
-            .with_filter(html_cleaner)
-            .with_filter(url_normalizer);
+        // 添加初始路径
+        scraper = scraper.with_initial_paths(initial_paths);
 
         Self { scraper }
     }
 }
 
 #[async_trait]
-impl CoreScraper for CssScraper {
+impl Scraper for CssScraper {
     fn name(&self) -> &str {
         self.scraper.name()
     }

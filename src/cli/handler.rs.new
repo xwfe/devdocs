@@ -1,0 +1,87 @@
+//! CLI 命令处理模块
+//!
+//! 使用新的设计模式实现 CLI 命令处理
+
+use super::Commands;
+use crate::core::error::Result;
+use std::error::Error;
+
+/// 处理 CLI 命令
+pub async fn handle_cli(cli: super::Cli) -> Result<(), Box<dyn Error>> {
+    match cli.command {
+        Commands::Server { host, port } => {
+            // 启动服务器
+            crate::app::start_server(&host, port).await?;
+        }
+        
+        Commands::DocsList => {
+            // 列出可用文档
+            super::scraper_cmd::list_docs("docs")?;
+        }
+        
+        Commands::DocsDownload { docs, all, default, installed } => {
+            // 下载文档
+            println!("文档下载功能尚未实现");
+            
+            if all {
+                println!("下载所有文档");
+            } else if default {
+                println!("下载默认文档集");
+            } else if installed {
+                println!("更新已安装的文档");
+            } else if !docs.is_empty() {
+                println!("下载指定文档: {:?}", docs);
+            } else {
+                println!("请指定要下载的文档");
+            }
+        }
+        
+        Commands::DocsGenerate { doc, version } => {
+            // 生成文档
+            if let Some(doc_name) = doc {
+                let version_str = version.as_deref().unwrap_or("latest");
+                println!("生成文档: {} (版本: {})", doc_name, version_str);
+                
+                // 运行抓取器
+                super::scraper_cmd::run_scraper(&doc_name, version_str, Some("docs"))?;
+            } else {
+                println!("请指定要生成的文档");
+            }
+        }
+        
+        Commands::DocsPage { doc, page } => {
+            // 生成文档的单个页面
+            println!("生成文档页面: {} (页面: {})", doc, page);
+            println!("此功能尚未实现");
+        }
+        
+        Commands::DocsPackage { doc } => {
+            // 打包文档
+            println!("打包文档: {}", doc);
+            println!("此功能尚未实现");
+        }
+        
+        Commands::DocsClean => {
+            // 清理文档包
+            super::scraper_cmd::clean_docs("docs")?;
+        }
+        
+        Commands::DocsManifest => {
+            // 生成文档清单
+            super::scraper_cmd::generate_manifest("docs")?;
+        }
+        
+        Commands::ScraperList => {
+            // 列出可用的文档抓取器
+            super::scraper_cmd::list_scrapers()?;
+        }
+        
+        Commands::ScraperRun { name, version, output } => {
+            // 运行文档抓取器
+            let output_str = output.as_deref();
+            super::scraper_cmd::run_scraper(&name, &version, output_str)?;
+        }
+    }
+    
+    Ok(())
+}

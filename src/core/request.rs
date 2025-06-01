@@ -117,6 +117,18 @@ impl Request {
         let client = builder.build().map_err(Error::Http)?;
         Ok(client)
     }
+
+    /// 测试用 - 获取请求选项
+    #[cfg(test)]
+    pub fn get_options(&self) -> &RequestOptions {
+        &self.options
+    }
+
+    /// 测试用 - 获取 URL
+    #[cfg(test)]
+    pub fn get_url(&self) -> &DocUrl {
+        &self.url
+    }
 }
 
 #[cfg(test)]

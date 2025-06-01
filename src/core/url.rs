@@ -1,219 +1,445 @@
-//! URL 处理模块
+//! URL 模块
 //!
-//! 参考原始 Ruby 项目中的 url.rb 实现
-//! 提供 URL 解析、合并和操作功能
+//! 严格对齐原版 Ruby 项目中的 core/url.rb 实现
 
+use crate::core::error::{Error, Result};
 use std::collections::HashMap;
-use std::path::PathBuf;
-use url::{ParseError, Url};
+use std::fmt;
 
-/// URL 处理结构体，封装 url 库的功能，同时提供与原 Ruby 项目相似的 API
-#[derive(Debug, Clone)]
-pub struct DocUrl {
-    inner: Url,
+/// DocUrl 类型别名，对应原版中的 URL 类
+pub type DocUrl = URL;
+
+/// URL 解析器
+#[derive(Debug, Clone, PartialEq)]
+pub struct URLParser;
+
+impl URLParser {
+    /// 分割 URL
+    ///
+    /// 对应原版 Ruby 的 PARSER.split 方法
+    pub fn split(&self, url: &str) -> Vec<Option<String>> {
+        // 简化的 URL 分割实现
+        // 返回 [scheme, userinfo, host, port, registry, path, opaque, query, fragment]
+        let mut parts = vec![None; 9];
+
+        if let Ok(parsed) = url::Url::parse(url) {
+            parts[0] = Some(parsed.scheme().to_string());
+            parts[2] = parsed.host_str().map(|h| h.to_string());
+            if let Some(port) = parsed.port() {
+                parts[3] = Some(port.to_string());
+            }
+            parts[5] = Some(parsed.path().to_string());
+            parts[7] = parsed.query().map(|q| q.to_string());
+            parts[8] = parsed.fragment().map(|f| f.to_string());
+        }
+
+        parts
+    }
+
+    /// 连接 URL
+    ///
+    /// 对应原版 Ruby 的 PARSER.join 方法
+    pub fn join(&self, base: &str, relative: &str) -> String {
+        if let Ok(base_url) = url::Url::parse(base) {
+            if let Ok(joined) = base_url.join(relative) {
+                return joined.to_string();
+            }
+        }
+        relative.to_string()
+    }
 }
 
-impl DocUrl {
-    /// 创建一个新的 DocUrl 实例
-    pub fn new(url: &str) -> Result<Self, ParseError> {
-        Ok(Self {
-            inner: Url::parse(url)?,
-        })
+/// URL 类
+///
+/// 对应原版 Ruby 的 URL 类
+#[derive(Debug, Clone, PartialEq)]
+pub struct URL {
+    scheme: Option<String>,
+    userinfo: Option<String>,
+    host: Option<String>,
+    port: Option<u16>,
+    registry: Option<String>,
+    path: String,
+    opaque: Option<String>,
+    query: Option<String>,
+    fragment: Option<String>,
+    parser: URLParser,
+}
+
+impl URL {
+    /// 创建新的 URL
+    ///
+    /// 对应原版 Ruby 的 initialize 方法
+    pub fn new(
+        scheme: Option<String>,
+        userinfo: Option<String>,
+        host: Option<String>,
+        port: Option<u16>,
+        registry: Option<String>,
+        path: String,
+        opaque: Option<String>,
+        query: Option<String>,
+        fragment: Option<String>,
+    ) -> Self {
+        Self {
+            scheme,
+            userinfo,
+            host,
+            port,
+            registry,
+            path,
+            opaque,
+            query,
+            fragment,
+            parser: URLParser,
+        }
+    }
+
+    /// 从哈希创建 URL
+    pub fn from_hash(hash: HashMap<String, String>) -> Self {
+        Self {
+            scheme: hash.get("scheme").cloned(),
+            userinfo: hash.get("userinfo").cloned(),
+            host: hash.get("host").cloned(),
+            port: hash.get("port").and_then(|p| p.parse().ok()),
+            registry: hash.get("registry").cloned(),
+            path: hash.get("path").cloned().unwrap_or_default(),
+            opaque: hash.get("opaque").cloned(),
+            query: hash.get("query").cloned(),
+            fragment: hash.get("fragment").cloned(),
+            parser: URLParser,
+        }
     }
 
     /// 解析 URL 字符串
-    pub fn parse(url: &str) -> Result<Self, ParseError> {
-        Self::new(url)
-    }
-
-    /// 合并基本 URL 和相对路径
-    pub fn join(&self, path: &str) -> Result<Self, ParseError> {
-        let joined = self.inner.join(path)?;
-        Ok(Self { inner: joined })
-    }
-
-    /// 静态方法 - 合并 URL
-    pub fn join_urls(base: &str, path: &str) -> Result<Self, ParseError> {
-        let base_url = Url::parse(base)?;
-        let joined = base_url.join(path)?;
-        Ok(Self { inner: joined })
-    }
-
-    /// 更新 URL 的参数
-    pub fn merge(&self, params: HashMap<&str, &str>) -> Result<Self, ParseError> {
-        let mut new_url = self.inner.clone();
-
-        for (key, value) in params {
-            match key {
-                "scheme" => new_url
-                    .set_scheme(value)
-                    .map_err(|_| ParseError::InvalidScheme)?,
-                "username" => {
-                    let password = new_url.password().unwrap_or("");
-                    new_url
-                        .set_username(value)
-                        .map_err(|_| ParseError::InvalidUsername)?;
-                    new_url
-                        .set_password(Some(password))
-                        .map_err(|_| ParseError::InvalidPassword)?;
-                }
-                "password" => {
-                    new_url
-                        .set_password(Some(value))
-                        .map_err(|_| ParseError::InvalidPassword)?;
-                }
-                "host" => new_url
-                    .set_host(Some(value))
-                    .map_err(|_| ParseError::InvalidHost)?,
-                "port" => {
-                    if let Ok(port) = value.parse::<u16>() {
-                        new_url
-                            .set_port(Some(port))
-                            .map_err(|_| ParseError::InvalidPort)?;
-                    } else {
-                        return Err(ParseError::InvalidPort);
-                    }
-                }
-                "path" => new_url.set_path(value),
-                "query" => new_url.set_query(Some(value)),
-                "fragment" => new_url.set_fragment(Some(value)),
-                _ => {}
-            }
+    ///
+    /// 对应原版 Ruby 的 parse 方法
+    pub fn parse(url: &str) -> Result<Self> {
+        if let Ok(parsed) = url::Url::parse(url) {
+            Ok(Self {
+                scheme: Some(parsed.scheme().to_string()),
+                userinfo: None,
+                host: parsed.host_str().map(|h| h.to_string()),
+                port: parsed.port(),
+                registry: None,
+                path: parsed.path().to_string(),
+                opaque: None,
+                query: parsed.query().map(|q| q.to_string()),
+                fragment: parsed.fragment().map(|f| f.to_string()),
+                parser: URLParser,
+            })
+        } else {
+            Err(Error::InvalidUrl(url.to_string()))
         }
-
-        Ok(Self { inner: new_url })
     }
 
-    /// 获取 URL 的源（origin）部分
-    pub fn origin(&self) -> String {
-        let scheme = self.inner.scheme();
-        let host = match self.inner.host_str() {
-            Some(h) => h,
-            None => return String::new(),
-        };
+    /// 连接 URL
+    ///
+    /// 对应原版 Ruby 的 join 方法
+    pub fn join(&self, relative: &str) -> Self {
+        let base = self.to_string();
+        let joined = self.parser.join(&base, relative);
+        Self::parse(&joined).unwrap_or_else(|_| self.clone())
+    }
 
-        let mut origin = format!("{}://{}", scheme, host.to_lowercase());
-        if let Some(port) = self.inner.port() {
-            if !((scheme == "http" && port == 80) || (scheme == "https" && port == 443)) {
+    /// 合并哈希参数
+    ///
+    /// 对应原版 Ruby 的 merge! 方法
+    pub fn merge(&mut self, hash: HashMap<String, String>) {
+        if let Some(scheme) = hash.get("scheme") {
+            self.scheme = Some(scheme.clone());
+        }
+        if let Some(userinfo) = hash.get("userinfo") {
+            self.userinfo = Some(userinfo.clone());
+        }
+        if let Some(host) = hash.get("host") {
+            self.host = Some(host.clone());
+        }
+        if let Some(port) = hash.get("port") {
+            self.port = port.parse().ok();
+        }
+        if let Some(registry) = hash.get("registry") {
+            self.registry = Some(registry.clone());
+        }
+        if let Some(path) = hash.get("path") {
+            self.path = path.clone();
+        }
+        if let Some(opaque) = hash.get("opaque") {
+            self.opaque = Some(opaque.clone());
+        }
+        if let Some(query) = hash.get("query") {
+            self.query = Some(query.clone());
+        }
+        if let Some(fragment) = hash.get("fragment") {
+            self.fragment = Some(fragment.clone());
+        }
+    }
+
+    /// 获取 origin
+    ///
+    /// 对应原版 Ruby 的 origin 方法
+    pub fn origin(&self) -> Option<String> {
+        if let (Some(scheme), Some(host)) = (&self.scheme, &self.host) {
+            let mut origin = format!("{}://{}", scheme.to_lowercase(), host);
+            if let Some(port) = self.port {
                 origin.push_str(&format!(":{}", port));
             }
+            Some(origin)
+        } else {
+            None
+        }
+    }
+
+    /// 获取规范化路径
+    ///
+    /// 对应原版 Ruby 的 normalized_path 方法
+    pub fn normalized_path(&self) -> String {
+        if self.path.is_empty() {
+            "/".to_string()
+        } else {
+            self.path.clone()
+        }
+    }
+
+    /// 获取到指定 URL 的子路径
+    ///
+    /// 对应原版 Ruby 的 subpath_to 方法
+    pub fn subpath_to(&self, url: &URL, ignore_case: Option<bool>) -> Option<String> {
+        if self.origin() != url.origin() {
+            return None;
         }
 
-        origin
-    }
+        let mut base = self.path.clone();
+        let mut dest = url.path.clone();
 
-    /// 获取相对路径（从 URL 提取路径部分）
-    pub fn relative(&self) -> String {
-        let mut result = self.inner.path().to_string();
-        if let Some(query) = self.inner.query() {
-            result.push_str(&format!("?{}", query));
+        if ignore_case.unwrap_or(false) {
+            base = base.to_lowercase();
+            dest = dest.to_lowercase();
         }
-        if let Some(fragment) = self.inner.fragment() {
-            result.push_str(&format!("#{}", fragment));
+
+        if base == dest {
+            Some(String::new())
+        } else if dest.starts_with(&format!("{}/", base))
+            || (base.ends_with('/') && dest.starts_with(&base))
+        {
+            let start_pos = if base.ends_with('/') {
+                base.len()
+            } else {
+                base.len() + 1
+            };
+            Some(url.path[start_pos..].to_string())
+        } else {
+            None
         }
-        result
     }
 
-    /// 将路径和查询字符串结合
-    pub fn path_and_query(&self) -> String {
-        self.relative()
+    /// 获取从指定 URL 的子路径
+    ///
+    /// 对应原版 Ruby 的 subpath_from 方法
+    pub fn subpath_from(&self, url: &URL, ignore_case: Option<bool>) -> Option<String> {
+        url.subpath_to(self, ignore_case)
     }
 
-    /// 获取路径（不包括查询字符串和片段）
-    pub fn path(&self) -> &str {
-        self.inner.path()
+    /// 检查是否包含指定 URL
+    ///
+    /// 对应原版 Ruby 的 contains? 方法
+    pub fn contains(&self, url: &URL, ignore_case: Option<bool>) -> bool {
+        self.subpath_to(url, ignore_case).is_some()
     }
 
-    /// 获取查询字符串
-    pub fn query(&self) -> Option<&str> {
-        self.inner.query()
+    /// 获取到指定 URL 的相对路径
+    ///
+    /// 对应原版 Ruby 的 relative_path_to 方法
+    pub fn relative_path_to(&self, url: &URL) -> Option<String> {
+        if self.origin() != url.origin() {
+            return None;
+        }
+
+        // 简化实现
+        let base_path = &self.normalized_path();
+        let dest_path = &url.normalized_path();
+
+        if dest_path.ends_with('/') {
+            // 目录路径
+            Some(format!(
+                "./{}",
+                dest_path
+                    .trim_start_matches(base_path)
+                    .trim_start_matches('/')
+            ))
+        } else {
+            // 文件路径
+            Some(dest_path.split('/').last().unwrap_or("").to_string())
+        }
     }
 
-    /// 获取片段部分
-    pub fn fragment(&self) -> Option<&str> {
-        self.inner.fragment()
+    /// 获取从指定 URL 的相对路径
+    ///
+    /// 对应原版 Ruby 的 relative_path_from 方法
+    pub fn relative_path_from(&self, url: &URL) -> Option<String> {
+        url.relative_path_to(self)
     }
 
-    /// 获取内部 Url 实例的可变引用
-    pub fn inner_mut(&mut self) -> &mut Url {
-        &mut self.inner
+    // Getter 方法
+    pub fn scheme(&self) -> Option<&String> {
+        self.scheme.as_ref()
     }
 
-    /// 获取内部 Url 实例的不可变引用
-    pub fn inner(&self) -> &Url {
-        &self.inner
+    pub fn host(&self) -> Option<&String> {
+        self.host.as_ref()
     }
 
-    /// 将 URL 转换为字符串
-    pub fn to_string(&self) -> String {
-        self.inner.to_string()
+    pub fn port(&self) -> Option<u16> {
+        self.port
     }
 
-    /// 将 URL 的路径转换为文件系统路径
-    pub fn to_filepath(&self) -> PathBuf {
-        let path = self.inner.path();
-        let path = path.trim_start_matches('/');
-        PathBuf::from(path)
+    pub fn path(&self) -> &String {
+        &self.path
+    }
+
+    pub fn query(&self) -> Option<&String> {
+        self.query.as_ref()
+    }
+
+    pub fn fragment(&self) -> Option<&String> {
+        self.fragment.as_ref()
+    }
+
+    // Setter 方法
+    pub fn set_scheme(&mut self, scheme: Option<String>) {
+        self.scheme = scheme;
+    }
+
+    pub fn set_host(&mut self, host: Option<String>) {
+        self.host = host;
+    }
+
+    pub fn set_port(&mut self, port: Option<u16>) {
+        self.port = port;
+    }
+
+    pub fn set_path(&mut self, path: String) {
+        self.path = path;
     }
 }
 
-impl From<Url> for DocUrl {
-    fn from(url: Url) -> Self {
-        Self { inner: url }
-    }
-}
+impl fmt::Display for URL {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        let mut url = String::new();
 
-impl AsRef<str> for DocUrl {
-    fn as_ref(&self) -> &str {
-        self.inner.as_str()
+        if let Some(scheme) = &self.scheme {
+            url.push_str(scheme);
+            url.push_str("://");
+        }
+
+        if let Some(host) = &self.host {
+            url.push_str(host);
+            if let Some(port) = self.port {
+                url.push_str(&format!(":{}", port));
+            }
+        }
+
+        url.push_str(&self.path);
+
+        if let Some(query) = &self.query {
+            url.push('?');
+            url.push_str(query);
+        }
+
+        if let Some(fragment) = &self.fragment {
+            url.push('#');
+            url.push_str(fragment);
+        }
+
+        write!(f, "{}", url)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
 
     #[test]
     fn test_parse() {
-        let url = DocUrl::parse("https://example.com/path").unwrap();
-        assert_eq!(url.inner().scheme(), "https");
-        assert_eq!(url.inner().host_str(), Some("example.com"));
-        assert_eq!(url.inner().path(), "/path");
-    }
-
-    #[test]
-    fn test_join() {
-        let url = DocUrl::parse("https://example.com/").unwrap();
-        let joined = url.join("subpath").unwrap();
-        assert_eq!(joined.to_string(), "https://example.com/subpath");
-    }
-
-    #[test]
-    fn test_join_urls() {
-        let joined = DocUrl::join_urls("https://example.com/", "subpath").unwrap();
-        assert_eq!(joined.to_string(), "https://example.com/subpath");
+        let url = URL::parse("https://example.com:8080/path?query=value#fragment");
+        assert_eq!(url.scheme(), Some(&"https".to_string()));
+        assert_eq!(url.host(), Some(&"example.com".to_string()));
+        assert_eq!(url.port(), Some(8080));
+        assert_eq!(url.path(), "/path");
+        assert_eq!(url.query(), Some(&"query=value".to_string()));
+        assert_eq!(url.fragment(), Some(&"fragment".to_string()));
     }
 
     #[test]
     fn test_origin() {
-        let url = DocUrl::parse("https://example.com:8080/path").unwrap();
-        assert_eq!(url.origin(), "https://example.com:8080");
+        let url = URL::parse("https://example.com:8080/path");
+        assert_eq!(url.origin(), Some("https://example.com:8080".to_string()));
+
+        let url2 = URL::parse("https://example.com/path");
+        assert_eq!(url2.origin(), Some("https://example.com".to_string()));
     }
 
     #[test]
-    fn test_relative() {
-        let url = DocUrl::parse("https://example.com/path?query=value#fragment").unwrap();
-        assert_eq!(url.relative(), "/path?query=value#fragment");
+    fn test_normalized_path() {
+        let url = URL::parse("https://example.com");
+        assert_eq!(url.normalized_path(), "/");
+
+        let url2 = URL::parse("https://example.com/path");
+        assert_eq!(url2.normalized_path(), "/path");
+    }
+
+    #[test]
+    fn test_subpath_to() {
+        let base = URL::parse("https://example.com/docs");
+        let target = URL::parse("https://example.com/docs/api/reference");
+
+        assert_eq!(
+            base.subpath_to(&target, None),
+            Some("/api/reference".to_string())
+        );
+    }
+
+    #[test]
+    fn test_contains() {
+        let base = URL::parse("https://example.com/docs");
+        let target = URL::parse("https://example.com/docs/api");
+
+        assert!(base.contains(&target, None));
+    }
+
+    #[test]
+    fn test_join() {
+        let base = URL::parse("https://example.com/docs/");
+        let joined = base.join("api/reference.html");
+
+        assert_eq!(
+            joined.to_string(),
+            "https://example.com/docs/api/reference.html"
+        );
     }
 
     #[test]
     fn test_merge() {
-        let url = DocUrl::parse("https://example.com/path").unwrap();
-        let mut params = HashMap::new();
-        params.insert("path", "/newpath");
-        params.insert("query", "key=value");
-        let merged = url.merge(params).unwrap();
-        assert_eq!(merged.to_string(), "https://example.com/newpath?key=value");
+        let mut url = URL::parse("https://example.com/path");
+        let mut hash = HashMap::new();
+        hash.insert("host".to_string(), "newhost.com".to_string());
+        hash.insert("path".to_string(), "/newpath".to_string());
+
+        url.merge(hash);
+        assert_eq!(url.host(), Some(&"newhost.com".to_string()));
+        assert_eq!(url.path(), "/newpath");
+    }
+
+    #[test]
+    fn test_to_string() {
+        let url = URL::parse("https://example.com:8080/path?query=value#fragment");
+        let url_string = url.to_string();
+
+        assert!(url_string.contains("https://"));
+        assert!(url_string.contains("example.com"));
+        assert!(url_string.contains(":8080"));
+        assert!(url_string.contains("/path"));
+        assert!(url_string.contains("?query=value"));
+        assert!(url_string.contains("#fragment"));
     }
 }

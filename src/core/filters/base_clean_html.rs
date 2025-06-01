@@ -1,143 +1,113 @@
-//! 基础HTML清理过滤器
-//!
-//! 提供通用的HTML清理功能，可以被特定文档类型的过滤器继承
-
 use crate::core::error::Result;
 use crate::core::scraper::filter::{Filter, FilterContext};
-use scraper::{Html, Node, Selector};
+use nipper::Document;
 use std::any::Any;
+use url::Url;
 
-/// 过滤器基础特质
-pub trait FilterBase {}
-
-/// 基础HTML清理过滤器
-///
-/// 该过滤器提供了基本的HTML清理功能，如移除脚本、样式、注释等。
-/// 特定文档类型的清理过滤器应该继承此过滤器并根据需要扩展功能。
-pub struct BaseCleanHtmlFilter;
-
-impl BaseCleanHtmlFilter {
-    /// 创建新的基础HTML清理过滤器
-    pub fn new() -> Self {
-        Self
-    }
-
-    /// 移除指定选择器匹配的元素
-    pub fn remove_elements(&self, html: &str, selectors: &[&str]) -> String {
-        let document = Html::parse_document(html);
-        let mut result = html.to_string();
-
-        for selector_str in selectors {
-            if let Ok(selector) = Selector::parse(selector_str) {
-                // 查找匹配的元素并移除
-                for element in document.select(&selector) {
-                    let html_fragment = element.html();
-                    result = result.replace(&html_fragment, "");
-                }
-            }
+pub trait FilterBase {
+    fn normalize_href(&self, href: &str, context: &FilterContext) -> String {
+        if href.starts_with('#') || href.starts_with("mailto:") || href.starts_with("tel:") || href.starts_with("javascript:") {
+            return href.to_string();
         }
 
-        result
+        let current_as_url = Url::parse(&context.current_url);
+        if let Ok(base_url_for_href) = current_as_url {
+            if let Ok(parsed_href) = base_url_for_href.join(href) {
+                if parsed_href.as_str().starts_with(&context.root_url) {
+                    let relative_path = parsed_href.as_str().trim_start_matches(&context.root_url);
+                    return relative_path.trim_start_matches('/').to_string();
+                }
+                return parsed_href.as_ref().to_string();
+            }
+        }
+        href.trim_start_matches('/').to_string()
     }
 
-    /// 处理代码块，提取语言信息和代码内容
-    pub fn process_code_blocks(&self, html: &str) -> String {
-        if let Ok(selector) = Selector::parse("pre") {
-            let document = Html::parse_document(html);
-            let mut new_html = String::new();
-
-            document.select(&selector).for_each(|pre_node| {
-                let mut pre_html = pre_node.html();
-
-                // 提取语言信息
-                if let Ok(lang_selector) = Selector::parse("[class*='language-']") {
-                    if let Some(lang_node) = pre_node.select(&lang_selector).next() {
-                        let class_attr = lang_node.value().attr("class").unwrap_or("");
-                        let language = class_attr
-                            .split_whitespace()
-                            .find(|c| c.starts_with("language-"))
-                            .and_then(|c| c.strip_prefix("language-"))
-                            .unwrap_or("");
-
-                        // 添加data-language属性
-                        pre_html = pre_html
-                            .replace("<pre", &format!("<pre data-language=\"{}\"", language));
+    fn normalize_hrefs(&self, document: &mut Document, base_url: &Url, selector_str: &str, attr_name: &str) {
+        document.select(selector_str).iter().for_each(|mut el_sel| {
+            if let Some(attr_val_cow) = el_sel.attr(attr_name) {
+                let attr_val = attr_val_cow.to_string();
+                if attr_val.starts_with("//") {
+                    let new_url_str = format!("{}:{}", base_url.scheme(), attr_val);
+                    el_sel.set_attr(attr_name, new_url_str.as_str());
+                } else if attr_val.starts_with("/") {
+                    if let Ok(joined_url) = base_url.join(&attr_val) {
+                        el_sel.set_attr(attr_name, joined_url.as_str());
+                    }
+                } else if !attr_val.starts_with("http") && !attr_val.starts_with("#") && !attr_val.starts_with("mailto:") && !attr_val.is_empty() {
+                    if let Ok(joined_url) = base_url.join(&attr_val) {
+                        el_sel.set_attr(attr_name, joined_url.as_str());
                     }
                 }
+            }
+        });
+    }
 
-                // 提取代码内容
-                if let Ok(token_line_selector) = Selector::parse(".token-line") {
-                    let token_lines: Vec<String> = pre_node
-                        .select(&token_line_selector)
-                        .map(|node| node.text().collect::<String>())
-                        .collect();
+    fn remove_elements(&self, document: &mut Document, selectors: &[&str]) {
+        for s in selectors {
+            document.select(s).remove();
+        }
+    }
 
-                    if !token_lines.is_empty() {
-                        let code_content = token_lines.join("\n");
-                        let start_pre = pre_html.find('>').map(|i| i + 1).unwrap_or(0);
-                        let end_pre = pre_html.rfind("</pre>").unwrap_or(pre_html.len());
-                        pre_html = format!(
-                            "{}{}{}",
-                            &pre_html[..start_pre],
-                            code_content,
-                            &pre_html[end_pre..]
-                        );
-                    }
-                }
-
-                new_html.push_str(&pre_html);
+    fn remove_attributes(&self, document: &mut Document, selector_attrs: &[(&str, &str)]) {
+        for (selector, attr_name) in selector_attrs {
+            document.select(selector).iter().for_each(|mut el_sel| {
+                el_sel.remove_attr(attr_name);
             });
-
-            if !new_html.is_empty() {
-                return new_html;
-            }
         }
-
-        html.to_string()
-    }
-
-    /// 移除所有元素的class和style属性
-    pub fn remove_attributes(&self, html: &str, attributes: &[&str]) -> String {
-        let document = Html::parse_document(html);
-        let mut result = html.to_string();
-
-        for attr in attributes {
-            // 使用简单的字符串替换来移除属性
-            // 注意：这是一个简化的实现，对于复杂的HTML可能不够健壮
-            let pattern = format!(r#" {}="[^"]*""#, attr);
-            result = result.replace(&pattern, "");
-        }
-
-        result
     }
 }
 
-impl FilterBase for BaseCleanHtmlFilter {}
+pub struct DefaultCleanHtmlFilter;
 
-impl Filter for BaseCleanHtmlFilter {
-    fn apply(&self, html: &str, _context: &mut FilterContext) -> Result<String> {
-        // 基本的HTML清理 - 移除脚本、样式和注释
-        let selectors_to_remove = ["script", "style", "link", "comment()"];
-        let html = self.remove_elements(html, &selectors_to_remove);
+impl DefaultCleanHtmlFilter {
+    pub fn name(&self) -> &str {
+        "default_clean_html"
+    }
 
-        // 处理代码块
-        let html = self.process_code_blocks(&html);
+    fn remove_elements_custom(&self, document: &mut Document, tags_to_remove: &[&str]) {
+        self.remove_elements(document, tags_to_remove);
+    }
 
-        // 移除class和style属性
-        let html = self.remove_attributes(&html, &["class", "style"]);
+    fn normalize_links_custom(&self, document: &mut Document, context: &FilterContext) {
+        match Url::parse(&context.current_url) {
+            Ok(base_url) => {
+                self.normalize_hrefs(document, &base_url, "a", "href");
+                self.normalize_hrefs(document, &base_url, "link[rel=canonical]", "href");
+            }
+            Err(e) => {
+                // Log or handle the error appropriately
+                // For now, just print a warning or skip normalization for this context
+                eprintln!("Warning: Could not parse current_url '{}': {}. Skipping link normalization.", context.current_url, e);
+            }
+        }
+    }
+}
 
-        Ok(html)
+impl Filter for DefaultCleanHtmlFilter {
+    fn apply(&self, html: &str, context: &mut FilterContext) -> Result<String> {
+        let mut document = Document::from(html);
+
+        let tags_to_remove = [
+            "script", "style", "iframe", "noscript", "applet", "embed", "object",
+        ];
+        self.remove_elements_custom(&mut document, &tags_to_remove);
+        self.normalize_links_custom(&mut document, context);
+
+        Ok(document.html().to_string())
     }
 
     fn box_clone(&self) -> Box<dyn Filter> {
-        Box::new(Self::new())
+        Box::new(DefaultCleanHtmlFilter) 
     }
 
     fn as_any(&self) -> &dyn Any {
         self
     }
 
-    fn as_any_mut(&mut self) -> &mut dyn Any {
+    fn as_any_mut(&mut self) -> &mut dyn Any { 
         self
     }
 }
+
+impl FilterBase for DefaultCleanHtmlFilter {}

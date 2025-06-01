@@ -1,0 +1,273 @@
+warning: unused import: `Type`
+ --> src/core/doc_new.rs:5:34
+  |
+5 | use crate::core::models::{Entry, Type};
+  |                                  ^^^^
+  |
+  = note: `#[warn(unused_imports)]` on by default
+
+warning: unused import: `std::collections::HashMap`
+ --> src/core/filters/filter_base.rs:7:5
+  |
+7 | use std::collections::HashMap;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `Deserialize` and `Serialize`
+ --> src/core/page_db.rs:5:13
+  |
+5 | use serde::{Deserialize, Serialize};
+  |             ^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `request::RequestOptions` and `request::Request`
+ --> src/core/scraper/base.rs:8:47
+  |
+8 |     entry_index::EntryIndex, page_db::PageDb, request::Request, request::RequestOptions,
+  |                                               ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `HashSet`
+  --> src/core/scraper/mod.rs:12:33
+   |
+12 | use std::collections::{HashMap, HashSet};
+   |                                 ^^^^^^^
+
+warning: unused variable: `old_json`
+   --> src/core/doc_new.rs:433:13
+    |
+433 |         let old_json = if read_write {
+    |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_old_json`
+    |
+    = note: `#[warn(unused_variables)]` on by default
+
+warning: unused variable: `old_json`
+   --> src/core/doc_new.rs:457:13
+    |
+457 |         let old_json = if read_write {
+    |             ^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_old_json`
+
+warning: variable does not need to be mutable
+   --> src/core/doc_new.rs:479:13
+    |
+479 |         let mut json = self.as_json();
+    |             ----^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` on by default
+
+warning: value assigned to `all_links` is never read
+  --> src/core/filters/base_clean_html.rs:31:17
+   |
+31 |         let mut all_links = Vec::new();
+   |                 ^^^^^^^^^
+   |
+   = help: maybe it is overwritten before being read?
+   = note: `#[warn(unused_assignments)]` on by default
+
+warning: variable does not need to be mutable
+  --> src/core/filters/html/images.rs:61:13
+   |
+61 |         let mut response = self
+   |             ----^^^^^^^^
+   |             |
+   |             help: remove this `mut`
+
+warning: unused variable: `initial_info`
+  --> src/core/instrumentable.rs:91:9
+   |
+91 |     let initial_info = InstrumentInfo {
+   |         ^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_initial_info`
+
+warning: unused variable: `content`
+  --> src/core/scraper/filter.rs:26:16
+   |
+26 |     pub fn new(content: &str, path: &str) -> Self {
+   |                ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_content`
+
+warning: unused variable: `context`
+  --> src/docs/babel/clean.rs:22:33
+   |
+22 |     fn apply(&self, html: &str, context: &mut FilterContext) -> Result<String> {
+   |                                 ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_context`
+
+warning: unused variable: `doc`
+  --> src/docs/html/entries.rs:23:24
+   |
+23 |     fn get_name(&self, doc: &Html, slug: &str) -> String {
+   |                        ^^^ help: if this is intentional, prefix it with an underscore: `_doc`
+
+warning: unused variable: `context`
+   --> src/docs/html/entries.rs:139:33
+    |
+139 |     fn apply(&self, html: &str, context: &mut FilterContext) -> Result<String> {
+    |                                 ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_context`
+
+warning: unused variable: `is_root`
+   --> src/docs/html/entries.rs:149:13
+    |
+149 |         let is_root = slug.is_empty() || slug == "/" || slug == &context.root_path;
+    |             ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_is_root`
+
+warning: unused variable: `context`
+  --> src/docs/javascript/clean.rs:19:33
+   |
+19 |     fn apply(&self, html: &str, context: &mut FilterContext) -> Result<String> {
+   |                                 ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_context`
+
+warning: unused variable: `context`
+  --> src/docs/javascript/entries.rs:63:33
+   |
+63 |     fn apply(&self, html: &str, context: &mut FilterContext) -> Result<String> {
+   |                                 ^^^^^^^ help: if this is intentional, prefix it with an underscore: `_context`
+
+warning: unused variable: `skip_paths`
+  --> src/docs/javascript/scraper.rs:49:13
+   |
+49 |         let skip_paths = vec![
+   |             ^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_skip_paths`
+
+warning: unused variable: `replace_paths`
+  --> src/docs/javascript/scraper.rs:63:13
+   |
+63 |         let replace_paths = vec![
+   |             ^^^^^^^^^^^^^ help: if this is intentional, prefix it with an underscore: `_replace_paths`
+
+warning: method `store_page` is never used
+   --> src/core/scraper/base.rs:202:8
+    |
+61  | impl UrlScraper {
+    | --------------- method in this implementation
+...
+202 |     fn store_page(&self, path: &str, content: &str) -> Result<()> {
+    |        ^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` on by default
+
+warning: methods `normalize_href` and `is_valid_internal_link` are never used
+   --> src/docs/babel/entries.rs:101:8
+    |
+56  | impl BabelEntriesFilter {
+    | ----------------------- methods in this implementation
+...
+101 |     fn normalize_href(&self, href: &str) -> String {
+    |        ^^^^^^^^^^^^^^
+...
+147 |     fn is_valid_internal_link(&self, href: &str, text: &str) -> bool {
+    |        ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: method `build_entry` is never used
+   --> src/docs/html/entries.rs:123:8
+    |
+17  | impl HtmlEntriesFilter {
+    | ---------------------- method in this implementation
+...
+123 |     fn build_entry(&self, name: String, fragment: Option<String>, entry_type: Option<String>, context: &FilterContext) -> (String, String, String) {
+    |        ^^^^^^^^^^^
+
+warning: field `path_prefix` is never read
+  --> src/docs/javascript/entries.rs:12:5
+   |
+10 | pub struct JavaScriptEntriesFilter {
+   |            ----------------------- field in this struct
+11 |     /// 输出路径前缀
+12 |     path_prefix: String,
+   |     ^^^^^^^^^^^
+
+warning: constant `CONTAINER` is never used
+  --> src/docs/javascript/scraper.rs:31:7
+   |
+31 | const CONTAINER: &str = "#content > .main-page-content";
+   |       ^^^^^^^^^
+
+warning: `xwdoc` (lib) generated 25 warnings (run `cargo fix --lib -p xwdoc` to apply 7 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 0.44s
+     Running `target/debug/xwdoc docs-generate babel`
+xwdoc 0.1.0
+抓取文档: babel (版本: latest)
+生成文档: babel (版本: latest)
+Starting Babel documentation scraping...
+Base URL: https://babeljs.io/docs/
+Initial paths: []
+Running URL scraper for Babel v7.21.4
+Base URL: https://babeljs.io/docs/
+Initial paths: []
+开始抓取所有页面...
+正在抓取: https://babeljs.io/docs/
+============= Babel 条目提取开始 =============
+正在处理页面路径: index
+当前URL: https://babeljs.io/docs/
+HTML内容长度: 57597 字节
+提取到文档名称: What is Babel?
+正在判断类型: name='What is Babel?', subpath='index'
+未找到匹配类型，返回默认类型: Miscellaneous
+确定条目类型: Miscellaneous
+生成条目: 名称=What is Babel?, 路径=index, 类型=Miscellaneous
+============= Babel 条目提取结束 =============
+正在抓取: https://babeljs.io/docs/videos/
+Failed to fetch https://babeljs.io/docs/videos/: 404 Not Found
+抓取失败 https://babeljs.io/docs/videos/: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/videos
+Failed to fetch https://babeljs.io/docs/videos: 404 Not Found
+抓取失败 https://babeljs.io/docs/videos: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/users
+Failed to fetch https://babeljs.io/docs/users: 404 Not Found
+抓取失败 https://babeljs.io/docs/users: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/team
+Failed to fetch https://babeljs.io/docs/team: 404 Not Found
+抓取失败 https://babeljs.io/docs/team: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/setup
+============= Babel 条目提取开始 =============
+正在处理页面路径: setup
+当前URL: https://babeljs.io/docs/setup
+HTML内容长度: 15561 字节
+提取到文档名称: Using Babel
+正在判断类型: name='Using Babel', subpath='setup'
+未找到匹配类型，返回默认类型: Miscellaneous
+确定条目类型: Miscellaneous
+生成条目: 名称=Using Babel, 路径=setup, 类型=Miscellaneous
+============= Babel 条目提取结束 =============
+正在抓取: https://babeljs.io/docs/repl
+Failed to fetch https://babeljs.io/docs/repl: 404 Not Found
+抓取失败 https://babeljs.io/docs/repl: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/docs/babel-preset-env
+Failed to fetch https://babeljs.io/docs/docs/babel-preset-env: 404 Not Found
+抓取失败 https://babeljs.io/docs/docs/babel-preset-env: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/docs/
+Failed to fetch https://babeljs.io/docs/docs/: 404 Not Found
+抓取失败 https://babeljs.io/docs/docs/: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/blog
+Failed to fetch https://babeljs.io/docs/blog: 404 Not Found
+抓取失败 https://babeljs.io/docs/blog: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/docs/plugins-list
+Failed to fetch https://babeljs.io/docs/docs/plugins-list: 404 Not Found
+抓取失败 https://babeljs.io/docs/docs/plugins-list: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/docs/plugins
+Failed to fetch https://babeljs.io/docs/docs/plugins: 404 Not Found
+抓取失败 https://babeljs.io/docs/docs/plugins: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/docs/config-files
+Failed to fetch https://babeljs.io/docs/docs/config-files: 404 Not Found
+抓取失败 https://babeljs.io/docs/docs/config-files: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/docs/babel-preset-typescript
+Failed to fetch https://babeljs.io/docs/docs/babel-preset-typescript: 404 Not Found
+抓取失败 https://babeljs.io/docs/docs/babel-preset-typescript: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/docs/babel-preset-react
+Failed to fetch https://babeljs.io/docs/docs/babel-preset-react: 404 Not Found
+抓取失败 https://babeljs.io/docs/docs/babel-preset-react: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/docs/babel-preset-flow
+Failed to fetch https://babeljs.io/docs/docs/babel-preset-flow: 404 Not Found
+抓取失败 https://babeljs.io/docs/docs/babel-preset-flow: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/docs/babel-parser
+Failed to fetch https://babeljs.io/docs/docs/babel-parser: 404 Not Found
+抓取失败 https://babeljs.io/docs/docs/babel-parser: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/docs/babel-helper-compilation-targets
+Failed to fetch https://babeljs.io/docs/docs/babel-helper-compilation-targets: 404 Not Found
+抓取失败 https://babeljs.io/docs/docs/babel-helper-compilation-targets: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/docs/babel-cli
+Failed to fetch https://babeljs.io/docs/docs/babel-cli: 404 Not Found
+抓取失败 https://babeljs.io/docs/docs/babel-cli: HTTP错误代码: 404
+正在抓取: https://babeljs.io/docs/docs/assumptions
+Failed to fetch https://babeljs.io/docs/docs/assumptions: 404 Not Found
+抓取失败 https://babeljs.io/docs/docs/assumptions: HTTP错误代码: 404
+已保存到: docs
+抓取完成！
+生成文档索引: babel
+索引生成完成: "docs/babel/index.json"

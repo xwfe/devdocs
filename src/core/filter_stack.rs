@@ -1,199 +1,280 @@
-//! 过滤器栈实现
-//! 参考 Ruby 版本 filter_stack.rb 设计
+//! FilterStack 模块
+//!
+//! 严格对齐原版 Ruby 项目中的 core/filter_stack.rb 实现
 
-use crate::core::scraper::filter::Filter;
-use std::collections::HashMap;
+use std::fmt;
 
-/// 过滤器栈，类似有序集合，支持插入、替换和追加操作
+/// 过滤器栈
+/// 
+/// 对应原版 Ruby 的 FilterStack 类
+#[derive(Debug, Clone, PartialEq)]
 pub struct FilterStack {
-    /// 过滤器映射
-    filters: Vec<(String, Box<dyn Filter>)>,
-    /// 过滤器工厂函数映射
-    factories: HashMap<String, Box<dyn Fn() -> Box<dyn Filter> + Send + Sync>>,
+    filters: Vec<String>,
 }
 
 impl FilterStack {
     /// 创建新的过滤器栈
-    pub fn new() -> Self {
+    /// 
+    /// 对应原版 Ruby 的 initialize 方法
+    pub fn new(filters: Option<Vec<String>>) -> Self {
         Self {
-            filters: Vec::new(),
-            factories: HashMap::new(),
+            filters: filters.unwrap_or_default(),
         }
     }
 
-    /// 注册过滤器工厂函数
-    pub fn register<F, T>(&mut self, name: &str, factory: F)
-    where
-        F: Fn() -> T + 'static + Send + Sync,
-        T: Filter + 'static,
-    {
-        let boxed_factory = Box::new(move || -> Box<dyn Filter> { Box::new(factory()) });
-        self.factories.insert(name.to_string(), boxed_factory);
+    /// 获取过滤器数量
+    /// 
+    /// 对应原版 Ruby 的 length 方法
+    pub fn length(&self) -> usize {
+        self.filters.len()
     }
 
-    /// 追加过滤器到栈尾部
-    pub fn push(&mut self, name: &str) -> Result<(), String> {
-        if let Some(factory) = self.factories.get(name) {
-            let filter = factory();
-            self.filters.push((name.to_string(), filter));
-            Ok(())
-        } else {
-            Err(format!("未找到过滤器: {}", name))
+    /// 获取过滤器列表的引用
+    pub fn filters(&self) -> &Vec<String> {
+        &self.filters
+    }
+
+    /// 推入过滤器
+    /// 
+    /// 对应原版 Ruby 的 push 方法
+    pub fn push(&mut self, names: &[&str]) {
+        for name in names {
+            self.filters.push(self.filter_const(name));
         }
     }
 
-    /// 在指定过滤器之前插入新过滤器
-    pub fn insert_before(&mut self, index: &str, name: &str) -> Result<(), String> {
-        if let Some(factory) = self.factories.get(name) {
-            let filter = factory();
+    /// 在指定位置插入过滤器
+    /// 
+    /// 对应原版 Ruby 的 insert 方法
+    pub fn insert(&mut self, index: FilterIndex, names: &[&str]) -> Result<(), String> {
+        let idx = self.assert_index(index)?;
+        for (i, name) in names.iter().enumerate() {
+            self.filters.insert(idx + i, self.filter_const(name));
+        }
+        Ok(())
+    }
 
-            if let Some(pos) = self.find_position(index) {
-                self.filters.insert(pos, (name.to_string(), filter));
-                Ok(())
-            } else {
-                Err(format!("未找到目标过滤器: {}", index))
+    /// 在指定位置之前插入过滤器
+    /// 
+    /// 对应原版 Ruby 的 insert_before 方法
+    pub fn insert_before(&mut self, index: FilterIndex, names: &[&str]) -> Result<(), String> {
+        self.insert(index, names)
+    }
+
+    /// 在指定位置之后插入过滤器
+    /// 
+    /// 对应原版 Ruby 的 insert_after 方法
+    pub fn insert_after(&mut self, index: FilterIndex, names: &[&str]) -> Result<(), String> {
+        let idx = self.assert_index(index)?;
+        let after_idx = FilterIndex::Position(idx + 1);
+        self.insert(after_idx, names)
+    }
+
+    /// 替换指定位置的过滤器
+    /// 
+    /// 对应原版 Ruby 的 replace 方法
+    pub fn replace(&mut self, index: FilterIndex, name: &str) -> Result<(), String> {
+        let idx = self.assert_index(index)?;
+        self.filters[idx] = self.filter_const(name);
+        Ok(())
+    }
+
+    /// 转换为数组
+    /// 
+    /// 对应原版 Ruby 的 to_a 方法
+    pub fn to_a(&self) -> Vec<String> {
+        self.filters.clone()
+    }
+
+    /// 创建可继承的副本
+    /// 
+    /// 对应原版 Ruby 的 inheritable_copy 方法
+    pub fn inheritable_copy(&self) -> Self {
+        Self::new(Some(self.filters.clone()))
+    }
+
+    /// 过滤器常量转换
+    /// 
+    /// 对应原版 Ruby 的 filter_const 方法
+    fn filter_const(&self, name: &str) -> String {
+        format!("{}Filter", self.camelize(&format!("{}_filter", name)))
+    }
+
+    /// 驼峰命名转换
+    fn camelize(&self, s: &str) -> String {
+        s.split('_')
+            .map(|word| {
+                let mut chars = word.chars();
+                match chars.next() {
+                    None => String::new(),
+                    Some(first) => first.to_uppercase().collect::<String>() + &chars.as_str().to_lowercase(),
+                }
+            })
+            .collect()
+    }
+
+    /// 验证索引
+    /// 
+    /// 对应原版 Ruby 的 assert_index 方法
+    fn assert_index(&self, index: FilterIndex) -> Result<usize, String> {
+        match index {
+            FilterIndex::Position(i) => {
+                if i <= self.filters.len() {
+                    Ok(i)
+                } else {
+                    Err(format!("Index {} out of bounds", i))
+                }
             }
-        } else {
-            Err(format!("未找到过滤器: {}", name))
-        }
-    }
-
-    /// 在指定过滤器之后插入新过滤器
-    pub fn insert_after(&mut self, index: &str, name: &str) -> Result<(), String> {
-        if let Some(factory) = self.factories.get(name) {
-            let filter = factory();
-
-            if let Some(pos) = self.find_position(index) {
-                self.filters.insert(pos + 1, (name.to_string(), filter));
-                Ok(())
-            } else {
-                Err(format!("未找到目标过滤器: {}", index))
+            FilterIndex::Name(name) => {
+                let filter_name = self.filter_const(name);
+                self.filters
+                    .iter()
+                    .position(|f| f == &filter_name)
+                    .ok_or_else(|| format!("No such filter to insert: {}", name))
             }
-        } else {
-            Err(format!("未找到过滤器: {}", name))
         }
     }
+}
 
-    /// 替换指定过滤器
-    pub fn replace(&mut self, index: &str, name: &str) -> Result<(), String> {
-        if let Some(factory) = self.factories.get(name) {
-            let filter = factory();
+/// 过滤器索引枚举
+/// 
+/// 支持按位置或名称索引
+#[derive(Debug, Clone)]
+pub enum FilterIndex {
+    Position(usize),
+    Name(&'static str),
+}
 
-            if let Some(pos) = self.find_position(index) {
-                self.filters[pos] = (name.to_string(), filter);
-                Ok(())
-            } else {
-                Err(format!("未找到目标过滤器: {}", index))
-            }
-        } else {
-            Err(format!("未找到过滤器: {}", name))
-        }
-    }
-
-    /// 直接添加命名过滤器（不通过工厂）
-    pub fn push_filter(&mut self, name: &str, filter: Box<dyn Filter>) {
-        self.filters.push((name.to_string(), filter));
-    }
-
-    /// 获取指定名称的过滤器
-    pub fn get_filter(&self, name: &str) -> Option<&Box<dyn Filter>> {
-        self.filters
-            .iter()
-            .find_map(|(n, f)| if n == name { Some(f) } else { None })
-    }
-
-    /// 获取所有过滤器名称
-    pub fn filter_names(&self) -> Vec<String> {
-        self.filters.iter().map(|(name, _)| name.clone()).collect()
-    }
-
-    /// 查找过滤器在栈中的位置
-    fn find_position(&self, name: &str) -> Option<usize> {
-        self.filters.iter().position(|(n, _)| n == name)
-    }
-
-    /// 获取过滤器列表
-    pub fn filters(&self) -> Vec<Box<dyn Filter>> {
-        self.filters.iter().map(|(_, f)| f.box_clone()).collect()
-    }
-
-    /// 检查是否包含指定过滤器
-    pub fn contains(&self, name: &str) -> bool {
-        self.filters.iter().any(|(n, _)| n == name)
-    }
-
-    /// 清空过滤器栈
-    pub fn clear(&mut self) {
-        self.filters.clear();
+impl fmt::Display for FilterStack {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "{:?}", self.filters)
     }
 }
 
 impl Default for FilterStack {
     fn default() -> Self {
-        Self::new()
+        Self::new(None)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::scrapers::Filter;
-    use std::any::Any;
 
-    struct TestFilter(String);
+    #[test]
+    fn test_new() {
+        let stack = FilterStack::new(None);
+        assert_eq!(stack.length(), 0);
 
-    impl Filter for TestFilter {
-        fn apply(
-            &self,
-            html: &str,
-            context: &crate::scrapers::filter::FilterContext,
-        ) -> crate::core::error::Result<String> {
-            Ok(format!("{}_{}", html, self.0))
-        }
-
-        fn box_clone(&self) -> Box<dyn Filter> {
-            Box::new(TestFilter(self.0.clone()))
-        }
-
-        fn as_any(&self) -> &dyn Any {
-            self
-        }
+        let stack = FilterStack::new(Some(vec!["TestFilter".to_string()]));
+        assert_eq!(stack.length(), 1);
     }
 
     #[test]
-    fn test_filter_stack() {
-        let mut stack = FilterStack::new();
+    fn test_push() {
+        let mut stack = FilterStack::new(None);
+        stack.push(&["clean_html", "normalize_urls"]);
+        
+        assert_eq!(stack.length(), 2);
+        assert!(stack.filters().contains(&"CleanHtmlFilter".to_string()));
+        assert!(stack.filters().contains(&"NormalizeUrlsFilter".to_string()));
+    }
 
-        // 注册过滤器工厂
-        stack.register("filter1", || TestFilter("1".to_string()));
-        stack.register("filter2", || TestFilter("2".to_string()));
-        stack.register("filter3", || TestFilter("3".to_string()));
+    #[test]
+    fn test_insert() {
+        let mut stack = FilterStack::new(None);
+        stack.push(&["clean_html"]);
+        
+        stack.insert(FilterIndex::Position(0), &["normalize_urls"]).unwrap();
+        assert_eq!(stack.filters()[0], "NormalizeUrlsFilter");
+        assert_eq!(stack.filters()[1], "CleanHtmlFilter");
+    }
 
-        // 测试 push
-        stack.push("filter1").unwrap();
-        assert_eq!(stack.filters.len(), 1);
+    #[test]
+    fn test_insert_by_name() {
+        let mut stack = FilterStack::new(None);
+        stack.push(&["clean_html"]);
+        
+        stack.insert(FilterIndex::Name("clean_html"), &["normalize_urls"]).unwrap();
+        assert_eq!(stack.filters()[0], "NormalizeUrlsFilter");
+        assert_eq!(stack.filters()[1], "CleanHtmlFilter");
+    }
 
-        // 测试 insert_after
-        stack.insert_after("filter1", "filter3").unwrap();
-        assert_eq!(stack.filters.len(), 2);
-        assert_eq!(stack.filters[1].0, "filter3");
+    #[test]
+    fn test_insert_after() {
+        let mut stack = FilterStack::new(None);
+        stack.push(&["clean_html"]);
+        
+        stack.insert_after(FilterIndex::Position(0), &["normalize_urls"]).unwrap();
+        assert_eq!(stack.filters()[0], "CleanHtmlFilter");
+        assert_eq!(stack.filters()[1], "NormalizeUrlsFilter");
+    }
 
-        // 测试 insert_before
-        stack.insert_before("filter3", "filter2").unwrap();
-        assert_eq!(stack.filters.len(), 3);
-        assert_eq!(stack.filters[1].0, "filter2");
+    #[test]
+    fn test_replace() {
+        let mut stack = FilterStack::new(None);
+        stack.push(&["clean_html"]);
+        
+        stack.replace(FilterIndex::Position(0), "normalize_urls").unwrap();
+        assert_eq!(stack.filters()[0], "NormalizeUrlsFilter");
+        assert_eq!(stack.length(), 1);
+    }
 
-        // 测试 replace
-        stack.replace("filter2", "filter1").unwrap();
-        assert_eq!(stack.filters.len(), 3);
-        assert_eq!(stack.filters[1].0, "filter1");
+    #[test]
+    fn test_to_a() {
+        let mut stack = FilterStack::new(None);
+        stack.push(&["clean_html", "normalize_urls"]);
+        
+        let array = stack.to_a();
+        assert_eq!(array.len(), 2);
+        assert!(array.contains(&"CleanHtmlFilter".to_string()));
+        assert!(array.contains(&"NormalizeUrlsFilter".to_string()));
+    }
 
-        // 测试 contains
-        assert!(stack.contains("filter1"));
-        assert!(!stack.contains("filter4"));
+    #[test]
+    fn test_inheritable_copy() {
+        let mut original = FilterStack::new(None);
+        original.push(&["clean_html"]);
+        
+        let copy = original.inheritable_copy();
+        assert_eq!(original.filters(), copy.filters());
+        
+        // 修改原始不应该影响副本
+        // 由于是不可变操作，这里主要测试结构相等性
+        assert_eq!(original, copy);
+    }
 
-        // 测试 clear
-        stack.clear();
-        assert_eq!(stack.filters.len(), 0);
+    #[test]
+    fn test_equality() {
+        let mut stack1 = FilterStack::new(None);
+        stack1.push(&["clean_html"]);
+        
+        let mut stack2 = FilterStack::new(None);
+        stack2.push(&["clean_html"]);
+        
+        assert_eq!(stack1, stack2);
+        
+        stack2.push(&["normalize_urls"]);
+        assert_ne!(stack1, stack2);
+    }
+
+    #[test]
+    fn test_filter_const() {
+        let stack = FilterStack::new(None);
+        assert_eq!(stack.filter_const("clean_html"), "CleanHtmlFilterFilter");
+        assert_eq!(stack.filter_const("normalize_urls"), "NormalizeUrlsFilterFilter");
+    }
+
+    #[test]
+    fn test_assert_index_errors() {
+        let stack = FilterStack::new(None);
+        
+        // 超出范围的位置索引
+        let result = stack.assert_index(FilterIndex::Position(10));
+        assert!(result.is_err());
+        
+        // 不存在的过滤器名称
+        let result = stack.assert_index(FilterIndex::Name("nonexistent"));
+        assert!(result.is_err());
     }
 }

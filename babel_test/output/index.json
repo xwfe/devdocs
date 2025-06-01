@@ -1,0 +1,172 @@
+{
+  "name": "Babel",
+  "version": "latest",
+  "release": "7.21.4",
+  "type": "simple",
+  "links": {
+    "home": "https://babeljs.io/docs",
+    "code": "https://babeljs.io/docs"
+  },
+  "entries": [
+    {
+  "path": "/docs/",
+  "title": "Docs",
+  "type": "doc"  
+},
+    {
+  "path": "/setup",
+  "title": "Setup",
+  "type": "doc"  
+},
+    {
+  "path": "/repl",
+  "title": "Try it out",
+  "type": "doc"  
+},
+    {
+  "path": "/videos/",
+  "title": "Videos",
+  "type": "doc"  
+},
+    {
+  "path": "/blog",
+  "title": "Blog",
+  "type": "doc"  
+},
+    {
+  "path": "/team",
+  "title": "Team",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/",
+  "title": "Guides",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/",
+  "title": "What is Babel?",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/usage",
+  "title": "Usage Guide",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/configuration",
+  "title": "Configure Babel",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/learn",
+  "title": "Learn ES2015",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/v7-migration",
+  "title": "Upgrade to Babel 7",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/config-files",
+  "title": "Config Reference",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/presets",
+  "title": "Presets",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/roadmap",
+  "title": "Misc",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/babel-cli",
+  "title": "Integration Packages",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/babel-parser",
+  "title": "Tooling Packages",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/babel-helper-compilation-targets",
+  "title": "Helper Packages",
+  "type": "doc"  
+},
+    {
+  "path": "/videos",
+  "title": "videos",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/plugins-list",
+  "title": "plugins",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/usage",
+  "title": "usage guide",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/babel-preset-react",
+  "title": "React preset",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/babel-preset-flow",
+  "title": "Flow preset",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/babel-preset-typescript",
+  "title": "TypeScript preset",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/plugins#presets",
+  "title": "preset",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/plugins",
+  "title": "Learn more →",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/assumptions",
+  "title": "\"assumptions\"",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/usage",
+  "title": "NextUsage Guide",
+  "type": "doc"  
+},
+    {
+  "path": "/docs/learn",
+  "title": "Learn ES2015",
+  "type": "doc"  
+},
+    {
+  "path": "/videos",
+  "title": "Videos",
+  "type": "doc"  
+},
+    {
+  "path": "/users",
+  "title": "User Showcase",
+  "type": "doc"  
+},
+    {
+  "path": "/blog",
+  "title": "Blog",
+  "type": "doc"  
+}
+  ]
+}

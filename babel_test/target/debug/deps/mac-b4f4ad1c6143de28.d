@@ -1,0 +1,14 @@
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/libmac-b4f4ad1c6143de28.rmeta: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/test.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/mem.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/format.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/syntax_ext.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/matches.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/inspect.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/cfg.rs
+
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/libmac-b4f4ad1c6143de28.rlib: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/test.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/mem.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/format.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/syntax_ext.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/matches.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/inspect.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/cfg.rs
+
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/mac-b4f4ad1c6143de28.d: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/test.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/mem.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/format.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/syntax_ext.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/matches.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/inspect.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/cfg.rs
+
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/lib.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/test.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/mem.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/format.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/syntax_ext.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/matches.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/inspect.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/mac-0.1.1/src/cfg.rs:

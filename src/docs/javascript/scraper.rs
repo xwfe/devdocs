@@ -4,8 +4,7 @@
 //! 参考文件: lib/docs/scrapers/mdn/javaScript.rb
 
 use crate::core::error::Result;
-use crate::core::filters::{HtmlCleanerFilter, UrlNormalizerFilter};
-use crate::core::scraper::{Scraper as CoreScraper, UrlScraper};
+use crate::core::scraper::base::{Scraper, UrlScraper};
 use crate::docs::javascript::JavaScriptEntriesFilter;
 use async_trait::async_trait;
 use chrono::{Datelike, NaiveDateTime};
@@ -82,26 +81,11 @@ impl JavaScriptScraper {
         ];
 
         // 过滤器
-        let html_cleaner = Box::new(
-            HtmlCleanerFilter::new()
-                .with_remove_tag("header")
-                .with_remove_tag("footer")
-                .with_remove_tag("nav")
-                .with_remove_class("article-actions")
-                .with_remove_class("section-edit")
-                .with_remove_class("documentation-actions")
-                .with_remove_class("metadata-container"),
-        );
-
-        let url_normalizer = Box::new(UrlNormalizerFilter::new(base_url, "/docs/javascript/"));
         let entries_filter = Box::new(JavaScriptEntriesFilter::new());
 
         // 配置抓取器
         scraper = scraper
-            .with_skip_paths(skip_paths)
             .with_skip_patterns(skip_patterns)
-            .with_filter(html_cleaner)
-            .with_filter(url_normalizer)
             .with_filter(entries_filter);
 
         Self { scraper }
@@ -134,7 +118,7 @@ impl JavaScriptScraper {
 }
 
 #[async_trait]
-impl CoreScraper for JavaScriptScraper {
+impl Scraper for JavaScriptScraper {
     fn name(&self) -> &str {
         self.scraper.name()
     }

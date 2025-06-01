@@ -3,7 +3,7 @@
 
 use crate::core::error::Result;
 use crate::core::scraper::filter::{Filter, FilterContext};
-use scraper::{Html, Selector, Element};
+use nipper::Document;
 use regex::Regex;
 use std::any::Any;
 
@@ -20,7 +20,7 @@ impl HtmlEntriesFilter {
         HtmlEntriesFilter
     }
 
-    fn get_name(&self, doc: &Html, slug: &str) -> String {
+    fn get_name(&self, doc: &Document, slug: &str) -> String {
         let mut name = slug.replace('_', " ")
             .replace('/', ".")
             .trim()
@@ -39,15 +39,14 @@ impl HtmlEntriesFilter {
         name
     }
 
-    fn get_type(&self, doc: &Html, slug: &str) -> Option<String> {
+    fn get_type(&self, doc: &Document, slug: &str) -> Option<String> {
         if slug.contains("CORS") || slug.contains("Using") {
             return Some("Miscellaneous".to_string());
         }
 
-        if let Ok(selector) = Selector::parse(".deprecated, .non-standard, .obsolete") {
-            if doc.select(&selector).next().is_some() {
-                return Some("Obsolete".to_string());
-            }
+        // 使用 nipper 选择器检查是否有过时或非标准元素
+        if doc.select(".deprecated, .non-standard, .obsolete").iter().next().is_some() {
+            return Some("Obsolete".to_string());
         }
 
         if slug.starts_with("Global_attr") {
@@ -59,23 +58,22 @@ impl HtmlEntriesFilter {
         }
     }
 
-    fn include_default_entry(&self, slug: &str, doc: &Html) -> bool {
+    fn include_default_entry(&self, slug: &str, doc: &Document) -> bool {
         if slug == "Element/Heading_Elements" {
             return false;
         }
 
-        if let Ok(selector) = Selector::parse(".overheadIndicator, .blockIndicator") {
-            if let Some(node) = doc.select(&selector).next() {
-                let content = node.text().collect::<String>();
-                if content.contains("not on a standards track") {
-                    return false;
-                }
+        // 使用 nipper 选择器检查是否有非标准轨道的指示器
+        if let Some(node) = doc.select(".overheadIndicator, .blockIndicator").iter().next() {
+            let content = node.text().to_string();
+            if content.contains("not on a standards track") {
+                return false;
             }
         }
         true
     }
 
-    fn additional_entries(&self, doc: &Html, slug: &str) -> Vec<(String, String, String)> {
+    fn additional_entries(&self, doc: &Document, slug: &str) -> Vec<(String, String, String)> {
         // 检查预定义的额外条目
         for (entry_slug, elements) in ADDITIONAL_ENTRIES {
             if *entry_slug == slug {
@@ -87,32 +85,41 @@ impl HtmlEntriesFilter {
 
         if slug == "Attributes" {
             let mut entries = Vec::new();
-            if let Ok(selector) = Selector::parse(".standard-table td:first-child") {
-                for node in doc.select(&selector) {
-                    let next_content = node.next_sibling_element().map_or("".to_string(), |e| e.text().collect());
-                    if next_content.contains("Global attribute") {
-                        continue;
-                    }
-
-                    let mut name = if let Some(code) = node.select(&Selector::parse("code").unwrap()).next() {
-                        code.text().collect::<String>().trim().to_string()
-                    } else {
-                        node.text().collect::<String>().trim().to_string()
-                    };
-                    name.push_str(" (attribute)");
-                    let id = name.to_lowercase().replace(' ', "-");
-                    entries.push((name, id, "Attributes".to_string()));
+            // 使用 nipper 选择器查找表格单元格
+            for node_selection in doc.select(".standard-table td:first-child").iter() {
+                // 获取下一个兄弟元素的文本
+                let next_sibling = node_selection.next_sibling();
+                // nipper 的 next_sibling() 返回一个新的 Selection
+                // 我们可以检查它是否有内容，方法是看是否有节点
+                let next_content = if next_sibling.iter().next().is_some() {
+                    next_sibling.text().to_string()
+                } else {
+                    "".to_string()
+                };
+                
+                if next_content.contains("Global attribute") {
+                    continue;
                 }
+
+                // 尝试从 code 元素获取名称，如果没有则使用节点本身的文本
+                let mut name = if let Some(code) = node_selection.select("code").iter().next() {
+                    code.text().to_string().trim().to_string()
+                } else {
+                    node_selection.text().to_string().trim().to_string()
+                };
+                
+                name.push_str(" (attribute)");
+                let id = name.to_lowercase().replace(' ', "-");
+                entries.push((name, id, "Attributes".to_string()));
             }
             entries
         } else if slug == "Link_types" {
             let mut entries = Vec::new();
-            if let Ok(selector) = Selector::parse(".standard-table td:first-child > code") {
-                for node in doc.select(&selector) {
-                    let name = format!("rel: {}", node.text().collect::<String>().trim());
-                    let id = name.to_lowercase().replace(' ', "-");
-                    entries.push((name, id, "Attributes".to_string()));
-                }
+            // 使用 nipper 选择器查找 code 元素
+            for node_selection in doc.select(".standard-table td:first-child > code").iter() {
+                let name = format!("rel: {}", node_selection.text().to_string().trim());
+                let id = name.to_lowercase().replace(' ', "-");
+                entries.push((name, id, "Attributes".to_string()));
             }
             entries
         } else {
@@ -133,10 +140,26 @@ impl HtmlEntriesFilter {
 
         (name, path, entry_type.unwrap_or_else(|| "Element".to_string()))
     }
+
+    fn is_api_page(&self, slug: &str) -> bool {
+        slug.starts_with("api/")
+    }
+
+    fn is_root_page(&self, slug: &str, context: &FilterContext) -> bool {
+        let is_root_path_match = match &context.root_path {
+            Some(rp) => slug == rp.as_str(),
+            None => false,
+        };
+        slug.is_empty() || slug == "/" || is_root_path_match
+    }
+
+    fn css_filter(&self) -> &str {
+        ""
+    }
 }
 
 impl Filter for HtmlEntriesFilter {
-    fn apply(&self, html: &str, context: &mut FilterContext) -> Result<String> {
+    fn apply(&self, html: &str, _context: &mut FilterContext) -> Result<String> {
         Ok(html.to_string())
     }
 
@@ -146,10 +169,10 @@ impl Filter for HtmlEntriesFilter {
 
     fn get_entries(&self, html: &str, context: &FilterContext) -> Vec<(String, String, String)> {
         let slug = &context.current_path;
-        let is_root = slug.is_empty() || slug == "/" || slug == &context.root_path;
+        let is_root = self.is_root_page(slug, context);
 
         let mut entries = Vec::new();
-        let doc = Html::parse_document(html);
+        let doc = Document::from(html);
 
         if self.include_default_entry(slug, &doc) {
             let name = self.get_name(&doc, slug);

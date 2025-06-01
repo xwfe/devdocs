@@ -1,0 +1,11 @@
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/libstring_cache-ebc4becfacfca4a2.rmeta: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/atom.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/dynamic_set.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/static_sets.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/trivial_impls.rs
+
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/libstring_cache-ebc4becfacfca4a2.rlib: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/atom.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/dynamic_set.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/static_sets.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/trivial_impls.rs
+
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/string_cache-ebc4becfacfca4a2.d: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/atom.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/dynamic_set.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/static_sets.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/trivial_impls.rs
+
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/lib.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/atom.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/dynamic_set.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/static_sets.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/string_cache-0.8.9/src/trivial_impls.rs:

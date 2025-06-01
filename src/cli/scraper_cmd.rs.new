@@ -1,0 +1,131 @@
+//! 文档抓取命令处理
+//!
+//! 使用新的设计模式实现文档抓取命令处理
+
+use crate::core::error::Result;
+use crate::docs::{get_all_doc_names, get_scraper, init, run_scraper as docs_run_scraper};
+use std::error::Error;
+
+/// 列出所有可用的抓取器
+pub fn list_scrapers() -> Result<(), Box<dyn Error>> {
+    // 初始化文档系统
+    init()?;
+    
+    // 获取所有已注册的文档名称
+    let doc_names = get_all_doc_names();
+    
+    println!("可用的文档抓取器:");
+    
+    if doc_names.is_empty() {
+        println!("  没有可用的文档抓取器");
+    } else {
+        for name in doc_names {
+            if let Some(scraper) = get_scraper(&name) {
+                println!("  {} - {} 文档抓取器 (版本: {})", 
+                    name, 
+                    scraper.name(), 
+                    scraper.version().unwrap_or("latest")
+                );
+            }
+        }
+    }
+    
+    Ok(())
+}
+
+/// 运行指定的抓取器
+pub fn run_scraper(name: &str, version: &str, output: Option<&str>) -> Result<(), Box<dyn Error>> {
+    // 初始化文档系统
+    init()?;
+    
+    println!("运行抓取器: {} (版本: {})", name, version);
+    
+    let output_str = output.unwrap_or("docs");
+    
+    // 运行抓取器
+    docs_run_scraper(name, version, output_str)?;
+    
+    Ok(())
+}
+
+/// 生成文档清单
+pub fn generate_manifest(docs_path: &str) -> Result<(), Box<dyn Error>> {
+    // 初始化文档系统
+    init()?;
+    
+    // 从磁盘加载文档
+    crate::docs::load_docs_from_disk(docs_path)?;
+    
+    // 生成清单
+    crate::docs::generate_manifest(docs_path)?;
+    
+    println!("已生成文档清单: {}/manifest.json", docs_path);
+    
+    Ok(())
+}
+
+/// 清理文档包
+pub fn clean_docs(docs_path: &str) -> Result<(), Box<dyn Error>> {
+    use std::fs;
+    use std::path::Path;
+    
+    let docs_path = Path::new(docs_path);
+    
+    if !docs_path.exists() {
+        println!("文档路径不存在: {:?}", docs_path);
+        return Ok(());
+    }
+    
+    // 遍历文档目录
+    let entries = fs::read_dir(docs_path)?;
+    
+    for entry_result in entries {
+        let entry = entry_result?;
+        let path = entry.path();
+        
+        if path.is_dir() {
+            // 检查是否为文档目录
+            let db_path = path.join("db.json");
+            let index_path = path.join("index.json");
+            
+            if db_path.exists() && index_path.exists() {
+                println!("清理文档: {:?}", path.file_name().unwrap_or_default());
+                
+                // 删除文档目录
+                fs::remove_dir_all(&path)?;
+            }
+        }
+    }
+    
+    println!("文档清理完成");
+    
+    Ok(())
+}
+
+/// 列出可用文档
+pub fn list_docs(docs_path: &str) -> Result<(), Box<dyn Error>> {
+    // 初始化文档系统
+    init()?;
+    
+    // 从磁盘加载文档
+    crate::docs::load_docs_from_disk(docs_path)?;
+    
+    // 获取所有文档
+    let docs = crate::docs::all_docs();
+    
+    println!("可用文档:");
+    
+    if docs.is_empty() {
+        println!("  没有可用文档");
+    } else {
+        for doc in docs {
+            println!("  {} - {} (版本: {})", 
+                doc.slug, 
+                doc.name, 
+                if doc.version.is_empty() { "latest" } else { &doc.version }
+            );
+        }
+    }
+    
+    Ok(())
+}

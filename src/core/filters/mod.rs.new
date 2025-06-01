@@ -1,0 +1,18 @@
+//! 过滤器模块
+//!
+//! 严格对齐原版 Ruby 项目中的 core/filter.rb 实现
+
+pub mod base_clean_html;
+pub mod core;
+pub mod factory;
+pub mod filter_base;
+pub mod html;
+
+pub use base_clean_html::DefaultCleanHtmlFilter;
+pub use core::*;
+pub use factory::{
+    create_default_html_stack, create_default_text_stack, create_filter_stack,
+    get_filter, get_filter_factory, register_filter, FilterFactory,
+};
+pub use filter_base::{Filter, FilterContext, FilterStack};
+pub use crate::core::filters::base_clean_html::FilterBase;

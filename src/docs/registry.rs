@@ -1,17 +1,93 @@
-//! 文档注册表管理
+//! 文档注册表管理（新版）
+//!
+//! 提供自动发现和加载文档的功能，遵循原版 Ruby 项目的设计模式
 
-use super::Documentation;
-use crate::core::error::Result;
+use crate::core::error::{Error, Result};
+use crate::core::scraper::ScraperTrait;
+use crate::docs::autoload::get_all_doc_names;
+use std::collections::HashMap;
+use std::path::Path;
+use std::sync::{Arc, Mutex};
+use once_cell::sync::Lazy;
+
+/// 文档信息
+#[derive(Debug, Clone)]
+pub struct Documentation {
+    /// 文档名称
+    pub name: String,
+    /// 文档别名
+    pub slug: String,
+    /// 文档版本
+    pub version: String,
+    /// 文档发布版本
+    pub release: String,
+    /// 修改时间
+    pub mtime: u64,
+    /// 数据库大小
+    pub db_size: usize,
+    /// 索引大小
+    pub index_size: usize,
+}
+
+impl Documentation {
+    /// 创建新的文档信息
+    pub fn new(name: &str, slug: &str, version: &str) -> Self {
+        Self {
+            name: name.to_string(),
+            slug: slug.to_string(),
+            version: version.to_string(),
+            release: String::new(),
+            mtime: 0,
+            db_size: 0,
+            index_size: 0,
+        }
+    }
+
+    /// 设置发布版本
+    pub fn with_release(mut self, release: &str) -> Self {
+        self.release = release.to_string();
+        self
+    }
+
+    /// 设置修改时间
+    pub fn with_mtime(mut self, mtime: u64) -> Self {
+        self.mtime = mtime;
+        self
+    }
+
+    /// 设置数据库大小
+    pub fn with_db_size(mut self, db_size: usize) -> Self {
+        self.db_size = db_size;
+        self
+    }
+
+    /// 设置索引大小
+    pub fn with_index_size(mut self, index_size: usize) -> Self {
+        self.index_size = index_size;
+        self
+    }
+}
 
 /// 管理可用文档的注册表
 pub struct DocRegistry {
+    /// 已注册的文档
     docs: Vec<Documentation>,
+    /// 文档抓取器
+    scrapers: HashMap<String, Box<dyn ScraperTrait>>,
 }
+
+/// 全局文档注册表
+static DOC_REGISTRY: Lazy<Arc<Mutex<DocRegistry>>> = Lazy::new(|| {
+    Arc::new(Mutex::new(DocRegistry::default()))
+});
 
 impl DocRegistry {
     /// 创建新的空注册表
     pub fn new() -> Self {
-        Self { docs: Vec::new() }
+        Self {
+            docs: Vec::new(),
+            scrapers: HashMap::new(),
+        }
     }
 
     /// 添加文档到注册表
@@ -36,9 +112,18 @@ impl DocRegistry {
             .find(|doc| doc.slug == slug && doc.version == version)
     }
 
+    /// 注册文档抓取器
+    pub fn register_scraper<S: ScraperTrait + 'static>(&mut self, name: &str, scraper: S) {
+        self.scrapers.insert(name.to_string(), Box::new(scraper));
+    }
+
+    /// 获取文档抓取器
+    pub fn get_scraper(&self, name: &str) -> Option<&Box<dyn ScraperTrait>> {
+        self.scrapers.get(name)
+    }
+
     /// 加载所有文档从磁盘
     pub fn load_from_disk(&mut self, path: &str) -> Result<()> {
-        use crate::core::error::Error;
         use std::fs;
         use std::path::Path;
         use std::time::UNIX_EPOCH;
@@ -140,7 +225,6 @@ impl DocRegistry {
 
     /// 生成清单JSON
     pub fn generate_manifest(&self, path: &str) -> Result<()> {
-        use crate::core::error::Error;
         use serde_json::{json, to_string_pretty};
         use std::fs;
         use std::path::Path;
@@ -179,10 +263,97 @@ impl DocRegistry {
 
         Ok(())
     }
+
+    /// 自动注册所有文档抓取器
+    pub fn register_all_scrapers(&mut self) -> Result<()> {
+        // 获取所有已注册的文档名称
+        let doc_names = get_all_doc_names();
+        
+        // 这里应该实现实际的自动注册逻辑
+        // 在实际实现中，我们需要:
+        // 1. 遍历所有已注册的文档名称
+        // 2. 对每个文档，获取其抓取器并注册到注册表中
+        
+        // 由于 Rust 不支持像 Ruby 那样的动态加载，我们需要一个不同的方法
+        // 一个可能的方法是使用宏来自动生成注册代码
+        
+        Ok(())
+    }
 }
 
 impl Default for DocRegistry {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+/// 获取全局文档注册表
+pub fn get_registry() -> Arc<Mutex<DocRegistry>> {
+    DOC_REGISTRY.clone()
+}
+
+/// 添加文档到注册表
+pub fn add_doc(doc: Documentation) {
+    let mut registry = DOC_REGISTRY.lock().unwrap();
+    registry.add(doc);
+}
+
+/// 获取所有可用文档
+pub fn all_docs() -> Vec<Documentation> {
+    let registry = DOC_REGISTRY.lock().unwrap();
+    registry.all().to_vec()
+}
+
+/// 通过别名查找文档
+pub fn find_doc(slug: &str) -> Option<Documentation> {
+    let registry = DOC_REGISTRY.lock().unwrap();
+    registry.find(slug).cloned()
+}
+
+/// 通过别名和版本查找文档
+pub fn find_doc_with_version(slug: &str, version: &str) -> Option<Documentation> {
+    let registry = DOC_REGISTRY.lock().unwrap();
+    registry.find_with_version(slug, version).cloned()
+}
+
+/// 注册文档抓取器
+pub fn register_scraper<S: ScraperTrait + 'static>(name: &str, scraper: S) {
+    let mut registry = DOC_REGISTRY.lock().unwrap();
+    registry.register_scraper(name, scraper);
+}
+
+/// 获取文档抓取器
+pub fn get_scraper(name: &str) -> Option<Box<dyn ScraperTrait>> {
+    let registry = DOC_REGISTRY.lock().unwrap();
+    registry.get_scraper(name).map(|s| s.box_clone())
+}
+
+/// 加载所有文档从磁盘
+pub fn load_docs_from_disk(path: &str) -> Result<()> {
+    let mut registry = DOC_REGISTRY.lock().unwrap();
+    registry.load_from_disk(path)
+}
+
+/// 生成清单JSON
+pub fn generate_manifest(path: &str) -> Result<()> {
+    let registry = DOC_REGISTRY.lock().unwrap();
+    registry.generate_manifest(path)
+}
+
+/// 自动注册所有文档抓取器
+pub fn register_all_scrapers() -> Result<()> {
+    let mut registry = DOC_REGISTRY.lock().unwrap();
+    registry.register_all_scrapers()
+}
+
+/// 文档抓取器特征扩展
+pub trait ScraperTraitExt: ScraperTrait {
+    /// 克隆抓取器
+    fn box_clone(&self) -> Box<dyn ScraperTrait>;
+}
+
+impl<T: ScraperTrait + Clone + 'static> ScraperTraitExt for T {
+    fn box_clone(&self) -> Box<dyn ScraperTrait> {
+        Box::new(self.clone())
     }
 }

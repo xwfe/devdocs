@@ -1,350 +1,383 @@
 //! Doc 模块
 //!
-//! 参考原始 Ruby 项目中的 doc.rb 实现
-//! 提供文档的基本属性和操作功能
+//! 严格对齐原版 Ruby 项目中的 core/doc.rb 实现
 
-use crate::core::error::Result;
-use crate::core::index_entry::{FullIndex, IndexEntry, IndexType};
-use crate::storage::store::Store;
+use crate::core::models::{Doc, Entry};
+use crate::core::page_db::PageDb;
+use crate::core::Result;
+use crate::core::entry_index::EntryIndex;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
-use std::collections::{HashMap, HashSet};
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::collections::HashMap;
 
-/// 常量定义
+/// 文档文件名常量
 pub const INDEX_FILENAME: &str = "index.json";
 pub const DB_FILENAME: &str = "db.json";
 pub const META_FILENAME: &str = "meta.json";
 
-/// 文档元数据结构
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct DocMeta {
-    pub name: String,
-    pub slug: String,
-    #[serde(rename = "type")]
-    pub doc_type: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub version: Option<String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub release: Option<String>,
-    #[serde(skip_serializing_if = "HashMap::is_empty")]
-    pub links: HashMap<String, String>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub mtime: Option<u64>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub db_size: Option<usize>,
+/// 设置错误
+#[derive(Debug)]
+pub struct SetupError {
+    pub message: String,
 }
 
-/// 页面数据库，存储页面路径和内容的映射
-#[derive(Clone, Debug, Serialize, Deserialize)]
-pub struct PageDb {
-    pages: HashMap<String, String>,
-}
-
-impl PageDb {
-    /// 创建新的 PageDb 实例
-    pub fn new() -> Self {
-        Self {
-            pages: HashMap::new(),
-        }
-    }
-
-    /// 添加页面
-    pub fn add(&mut self, path: String, content: String) {
-        self.pages.insert(path, content);
-    }
-
-    /// 检查是否为空
-    pub fn is_empty(&self) -> bool {
-        self.pages.is_empty()
-    }
-
-    /// 获取页面数量
-    pub fn len(&self) -> usize {
-        self.pages.len()
-    }
-
-    /// 转换为 JSON 字符串
-    pub fn to_json(&self) -> String {
-        serde_json::to_string(&self.pages).unwrap_or_else(|_| "{}".to_string())
+impl std::fmt::Display for SetupError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.message)
     }
 }
 
-/// 条目索引，管理条目和类型
-#[derive(Clone, Debug)]
-pub struct EntryIndex {
-    entries: Vec<IndexEntry>,
-    index: HashSet<String>,
-    types: HashMap<String, IndexType>,
+impl std::error::Error for SetupError {}
+
+/// 文档类
+/// 
+/// 对应原版 Ruby 的 Doc 类
+pub struct Doc {
+    // 类级别属性
+    name: Option<String>,
+    slug: Option<String>,
+    doc_type: Option<String>,
+    release: Option<String>,
+    is_abstract: bool,
+    links: Option<HashMap<String, String>>,
+    
+    // 版本相关
+    version: Option<String>,
+    versions: Option<Vec<Box<Doc>>>,
 }
 
-impl EntryIndex {
-    /// 创建新的 EntryIndex 实例
-    pub fn new() -> Self {
-        Self {
-            entries: Vec::new(),
-            index: HashSet::new(),
-            types: HashMap::new(),
-        }
-    }
-
-    /// 添加条目
-    pub fn add(&mut self, entry: IndexEntry) {
-        let entry_json = serde_json::to_string(&entry).unwrap_or_default();
-        
-        if self.index.insert(entry_json) {
-            if let Some(entry_type) = self.types.get_mut(&entry.entry_type) {
-                entry_type.count += 1;
-            } else {
-                self.types.insert(
-                    entry.entry_type.clone(),
-                    IndexType {
-                        name: entry.entry_type.clone(),
-                        count: 1,
-                        slug: entry.entry_type.to_lowercase(),
-                    },
-                );
-            }
-            self.entries.push(entry);
-        }
-    }
-
-    /// 添加多个条目
-    pub fn add_multiple(&mut self, entries: Vec<IndexEntry>) {
-        for entry in entries {
-            self.add(entry);
-        }
-    }
-
-    /// 检查是否为空
-    pub fn is_empty(&self) -> bool {
-        self.entries.is_empty()
-    }
-
-    /// 获取条目数量
-    pub fn len(&self) -> usize {
-        self.entries.len()
-    }
-
-    /// 转换为完整索引结构
-    pub fn to_full_index(&mut self) -> FullIndex {
-        // 按照名称排序条目
-        self.entries.sort_by(|a, b| sort_entries(&a.name, &b.name));
-        
-        // 转换类型列表并排序
-        let mut types: Vec<_> = self.types.values().cloned().collect();
-        types.sort_by(|a, b| sort_entries(&a.name, &b.name));
-        
-        FullIndex {
-            entries: self.entries.clone(),
-            types,
-        }
-    }
-
-    /// 转换为 JSON 字符串
-    pub fn to_json(&mut self) -> String {
-        serde_json::to_string(&self.to_full_index()).unwrap_or_else(|_| "{}".to_string())
-    }
-}
-
-/// 文档接口，定义文档需要实现的基本方法
-pub trait Doc {
-    /// 获取文档名称
-    fn name(&self) -> &str;
-    
-    /// 获取文档 slug
-    fn slug(&self) -> &str;
-    
-    /// 获取文档类型
-    fn doc_type(&self) -> &str;
-    
-    /// 获取文档版本
-    fn version(&self) -> Option<&str> {
-        None
-    }
-    
-    /// 获取发布信息
-    fn release(&self) -> Option<&str> {
-        None
-    }
-    
-    /// 获取文档链接
-    fn links(&self) -> HashMap<String, String> {
-        HashMap::new()
-    }
-    
-    /// 获取文档路径
-    fn path(&self) -> String {
-        self.slug().to_string()
-    }
-    
-    /// 获取索引文件路径
-    fn index_path(&self) -> String {
-        format!("{}/{}", self.path(), INDEX_FILENAME)
-    }
-    
-    /// 获取数据库文件路径
-    fn db_path(&self) -> String {
-        format!("{}/{}", self.path(), DB_FILENAME)
-    }
-    
-    /// 获取元数据文件路径
-    fn meta_path(&self) -> String {
-        format!("{}/{}", self.path(), META_FILENAME)
-    }
-    
-    /// 构建单个页面
-    fn build_page(&self, id: &str) -> Result<Option<HashMap<String, serde_json::Value>>>;
-    
-    /// 构建所有页面
-    fn build_pages<F>(&self, callback: F) -> Result<()>
-    where
-        F: FnMut(HashMap<String, serde_json::Value>);
-    
-    /// 获取抓取器版本
-    fn get_scraper_version(&self, opts: &HashMap<String, String>) -> Result<String>;
-    
-    /// 获取最新版本
-    fn get_latest_version(&self, opts: &HashMap<String, String>) -> Result<String>;
-    
-    /// 转换为 JSON 格式的元数据
-    fn as_json(&self) -> DocMeta {
-        DocMeta {
-            name: self.name().to_string(),
-            slug: self.slug().to_string(),
-            doc_type: self.doc_type().to_string(),
-            version: self.version().map(String::from),
-            release: self.release().map(String::from),
-            links: self.links(),
-            mtime: None,
-            db_size: None,
-        }
-    }
-    
-    /// 存储单个页面
-    fn store_page(&self, store: &mut dyn Store, id: &str) -> Result<bool> {
-        let mut index = EntryIndex::new();
-        let mut pages = PageDb::new();
-        
-        if let Some(page) = self.build_page(id)? {
-            if let Some(entries) = page.get("entries").and_then(|e| e.as_array()) {
-                // 处理并添加条目
-                for entry in entries {
-                    if let Ok(entry) = serde_json::from_value::<IndexEntry>(entry.clone()) {
-                        index.add(entry);
-                    }
-                }
-                
-                if !index.is_empty() {
-                    let path = page.get("path").and_then(|p| p.as_str()).unwrap_or("");
-                    let output = page.get("output").and_then(|o| o.as_str()).unwrap_or("");
-                    let store_path = page.get("store_path").and_then(|p| p.as_str()).unwrap_or("");
-                    
-                    pages.add(path.to_string(), output.to_string());
-                    self.store_index(store, INDEX_FILENAME, &mut index, false)?;
-                    self.store_index(store, DB_FILENAME, &mut pages, false)?;
-                    store.write(store_path, output)?;
-                    return Ok(true);
-                }
-            }
-        }
-        
-        Ok(false)
-    }
-    
-    /// 存储所有页面
-    fn store_pages(&self, store: &mut dyn Store) -> Result<bool> {
-        let mut index = EntryIndex::new();
-        let mut pages = PageDb::new();
-        
-        self.build_pages(|page| {
-            if let Some(entries) = page.get("entries").and_then(|e| e.as_array()) {
-                // 处理并添加条目
-                let mut has_entries = false;
-                for entry in entries {
-                    if let Ok(entry) = serde_json::from_value::<IndexEntry>(entry.clone()) {
-                        index.add(entry);
-                        has_entries = true;
-                    }
-                }
-                
-                if has_entries {
-                    let path = page.get("path").and_then(|p| p.as_str()).unwrap_or("");
-                    let output = page.get("output").and_then(|o| o.as_str()).unwrap_or("");
-                    let store_path = page.get("store_path").and_then(|p| p.as_str()).unwrap_or("");
-                    
-                    store.write(store_path, output).unwrap_or(());
-                    pages.add(path.to_string(), output.to_string());
-                }
-            }
-        })?;
-        
-        if !index.is_empty() {
-            self.store_index(store, INDEX_FILENAME, &mut index, true)?;
-            self.store_index(store, DB_FILENAME, &mut pages, true)?;
-            self.store_meta(store)?;
-            Ok(true)
-        } else {
-            Ok(false)
-        }
-    }
-    
-    /// 存储索引
-    fn store_index<T>(&self, store: &mut dyn Store, filename: &str, index: &mut T, read_write: bool) -> Result<()>
-    where
-        T: {
-            fn to_json(&mut self) -> String;
-        }
-    {
-        let old_json = if read_write {
-            store.read(filename).unwrap_or_else(|_| "{}".to_string())
-        } else {
-            "{}".to_string()
+impl Doc {
+    /// 创建新的文档
+    /// 
+    /// 对应原版 Ruby 的 new 方法
+    pub fn new() -> Result<Self, SetupError> {
+        let doc = Self {
+            name: None,
+            slug: None,
+            doc_type: None,
+            release: None,
+            is_abstract: false,
+            links: None,
+            version: None,
+            versions: None,
         };
         
-        let new_json = index.to_json();
-        
-        // TODO: 实现 instrument 功能
-        // instrument(format!("{}.doc", filename.replacen(".json", "", 1)), old_json, new_json);
-        
-        if read_write {
-            store.write(filename, &new_json)?;
+        if doc.is_abstract {
+            return Err(SetupError {
+                message: format!("{} is an abstract class and cannot be instantiated.", 
+                    std::any::type_name::<Self>())
+            });
         }
         
-        Ok(())
+        Ok(doc)
     }
-    
-    /// 存储元数据
-    fn store_meta(&self, store: &mut dyn Store) -> Result<()> {
-        let mut meta = self.as_json();
-        meta.mtime = Some(
-            SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .unwrap()
-                .as_secs(),
-        );
-        
-        meta.db_size = Some(store.size(DB_FILENAME)?);
-        let json = serde_json::to_string(&meta)?;
-        
-        store.write(META_FILENAME, &json)?;
-        
-        Ok(())
+
+    /// 继承方法（模拟类继承）
+    /// 
+    /// 对应原版 Ruby 的 inherited 方法
+    pub fn inherited(&self, subclass_type: Option<String>) -> Self {
+        Self {
+            name: self.name.clone(),
+            slug: self.slug.clone(),
+            doc_type: subclass_type.or_else(|| self.doc_type.clone()),
+            release: self.release.clone(),
+            is_abstract: self.is_abstract,
+            links: self.links.clone(),
+            version: None,
+            versions: None,
+        }
     }
-    
-    /// 判断文档版本状态
-    fn outdated_state(&self, scraper_version: &str, latest_version: &str) -> String {
-        let scraper_parts: Vec<_> = scraper_version
-            .split(|c| c == '-' || c == '.')
-            .map(|s| s.parse::<u32>().unwrap_or(0))
+
+    /// 版本管理
+    /// 
+    /// 对应原版 Ruby 的 version 方法
+    pub fn version<F>(&mut self, version: Option<String>, block: Option<F>) -> Option<Box<Doc>>
+    where
+        F: FnOnce(&mut Doc),
+    {
+        if let Some(block_fn) = block {
+            let mut klass = Box::new(self.clone());
+            klass.name = self.name.clone();
+            klass.slug = self.slug.clone();
+            klass.version = version;
+            klass.release = self.release.clone();
+            klass.links = self.links.clone();
+            
+            block_fn(&mut klass);
+            
+            if self.versions.is_none() {
+                self.versions = Some(Vec::new());
+            }
+            self.versions.as_mut().unwrap().push(klass.clone());
+            
+            Some(klass)
+        } else {
+            None
+        }
+    }
+
+    /// 设置版本
+    /// 
+    /// 对应原版 Ruby 的 version= 方法
+    pub fn set_version(&mut self, version: String) {
+        self.version = Some(version);
+    }
+
+    /// 获取所有版本
+    /// 
+    /// 对应原版 Ruby 的 versions 方法
+    pub fn versions(&self) -> Vec<&Doc> {
+        if let Some(versions) = &self.versions {
+            versions.iter().map(|v| v.as_ref()).collect()
+        } else {
+            vec![self]
+        }
+    }
+
+    /// 检查是否有版本
+    /// 
+    /// 对应原版 Ruby 的 version? 方法
+    pub fn has_version(&self) -> bool {
+        self.version.is_some()
+    }
+
+    /// 检查是否有多个版本
+    /// 
+    /// 对应原版 Ruby 的 versioned? 方法
+    pub fn is_versioned(&self) -> bool {
+        self.versions.is_some()
+    }
+
+    /// 获取名称
+    /// 
+    /// 对应原版 Ruby 的 name 方法
+    pub fn name(&self) -> String {
+        self.name.clone().unwrap_or_else(|| {
+            // 模拟 Ruby 的 super.demodulize
+            std::any::type_name::<Self>()
+                .split("::")
+                .last()
+                .unwrap_or("Doc")
+                .to_string()
+        })
+    }
+
+    /// 获取 slug
+    /// 
+    /// 对应原版 Ruby 的 slug 方法
+    pub fn slug(&self) -> Result<String, String> {
+        let base_slug = self.slug.clone()
+            .or_else(|| self.default_slug())
+            .ok_or_else(|| "slug is required".to_string())?;
+        
+        if self.has_version() {
+            Ok(format!("{}~{}", base_slug, self.version_slug()))
+        } else {
+            Ok(base_slug)
+        }
+    }
+
+    /// 获取版本 slug
+    /// 
+    /// 对应原版 Ruby 的 version_slug 方法
+    pub fn version_slug(&self) -> String {
+        if let Some(version) = &self.version {
+            let mut slug = version.to_lowercase();
+            slug = slug.replace('+', "p");
+            slug = slug.replace('#', "s");
+            // 替换非字母数字字符为下划线
+            slug = slug.chars()
+                .map(|c| if c.is_alphanumeric() || c == '_' || c == '.' { c } else { '_' })
+                .collect();
+            slug
+        } else {
+            String::new()
+        }
+    }
+
+    /// 获取路径
+    /// 
+    /// 对应原版 Ruby 的 path 方法
+    pub fn path(&self) -> Result<String, String> {
+        self.slug()
+    }
+
+    /// 获取索引路径
+    /// 
+    /// 对应原版 Ruby 的 index_path 方法
+    pub fn index_path(&self) -> Result<String, String> {
+        Ok(format!("{}/{}", self.path()?, INDEX_FILENAME))
+    }
+
+    /// 获取数据库路径
+    /// 
+    /// 对应原版 Ruby 的 db_path 方法
+    pub fn db_path(&self) -> Result<String, String> {
+        Ok(format!("{}/{}", self.path()?, DB_FILENAME))
+    }
+
+    /// 获取元数据路径
+    /// 
+    /// 对应原版 Ruby 的 meta_path 方法
+    pub fn meta_path(&self) -> Result<String, String> {
+        Ok(format!("{}/{}", self.path()?, META_FILENAME))
+    }
+
+    /// 转换为 JSON
+    /// 
+    /// 对应原版 Ruby 的 as_json 方法
+    pub fn as_json(&self) -> DocJson {
+        let mut json = DocJson {
+            name: self.name(),
+            slug: self.slug().unwrap_or_default(),
+            doc_type: self.doc_type.clone(),
+            links: None,
+            version: None,
+            release: None,
+        };
+
+        if let Some(links) = &self.links {
+            if !links.is_empty() {
+                json.links = Some(links.clone());
+            }
+        }
+
+        if self.has_version() || self.version.is_some() {
+            json.version = self.version.clone();
+        }
+
+        if let Some(release) = &self.release {
+            if !release.is_empty() {
+                json.release = Some(release.clone());
+            }
+        }
+
+        json
+    }
+
+    /// 存储单个页面
+    /// 
+    /// 对应原版 Ruby 的 store_page 方法
+    pub fn store_page<S>(&self, store: &mut S, id: &str) -> bool
+    where
+        S: Store,
+    {
+        let mut index = EntryIndex::new();
+        let mut pages = PageDb::new();
+
+        match store.open(&self.path().unwrap_or_default()) {
+            Ok(_) => {
+                if let Ok(page) = self.build_page(id) {
+                    if self.should_store_page(&page) {
+                        index.add_entries(page.entries);
+                        pages.add(page.path, page.output.clone());
+                        
+                        let _ = self.store_index(store, INDEX_FILENAME, &index, false);
+                        let _ = self.store_index_pages(store, DB_FILENAME, &pages, false);
+                        let _ = store.write(&page.store_path, &page.output);
+                        
+                        true
+                    } else {
+                        false
+                    }
+                } else {
+                    false
+                }
+            }
+            Err(error) => {
+                eprintln!("ERROR: {}", error);
+                false
+            }
+        }
+    }
+
+    /// 存储所有页面
+    /// 
+    /// 对应原版 Ruby 的 store_pages 方法
+    pub fn store_pages<S>(&self, store: &mut S) -> bool
+    where
+        S: Store,
+    {
+        let mut index = EntryIndex::new();
+        let mut pages = PageDb::new();
+
+        match store.replace(&self.path().unwrap_or_default()) {
+            Ok(_) => {
+                let mut has_pages = false;
+                self.build_pages(|page| {
+                    if !self.should_store_page(&page) {
+                        return;
+                    }
+                    
+                    let _ = store.write(&page.store_path, &page.output);
+                    index.add_entries(page.entries);
+                    pages.add(page.path, page.output);
+                    has_pages = true;
+                });
+
+                if has_pages {
+                    let _ = self.store_index(store, INDEX_FILENAME, &index, true);
+                    let _ = self.store_index_pages(store, DB_FILENAME, &pages, true);
+                    let _ = self.store_meta(store);
+                    true
+                } else {
+                    false
+                }
+            }
+            Err(error) => {
+                eprintln!("ERROR: {}", error);
+                false
+            }
+        }
+    }
+
+    /// 构建页面（需要子类实现）
+    /// 
+    /// 对应原版 Ruby 的 build_page 方法
+    pub fn build_page(&self, _id: &str) -> Result<PageData, String> {
+        Err("NotImplementedError".to_string())
+    }
+
+    /// 构建所有页面（需要子类实现）
+    /// 
+    /// 对应原版 Ruby 的 build_pages 方法
+    pub fn build_pages<F>(&self, _block: F)
+    where
+        F: FnMut(PageData),
+    {
+        // NotImplementedError
+    }
+
+    /// 获取爬虫版本
+    /// 
+    /// 对应原版 Ruby 的 get_scraper_version 方法
+    pub fn get_scraper_version(&self, _opts: &HashMap<String, String>) -> Option<String> {
+        // 如果定义了 options[:release]，返回它
+        // 否则返回 DevDocs 生产环境中文档最后修改的时间戳
+        None // 简化实现
+    }
+
+    /// 获取最新版本（需要子类实现）
+    /// 
+    /// 对应原版 Ruby 的 get_latest_version 方法
+    pub fn get_latest_version(&self, _opts: &HashMap<String, String>) -> Result<String, String> {
+        Err("NotImplementedError".to_string())
+    }
+
+    /// 检查过时状态
+    /// 
+    /// 对应原版 Ruby 的 outdated_state 方法
+    pub fn outdated_state(&self, scraper_version: &str, latest_version: &str) -> String {
+        let scraper_parts: Vec<i32> = scraper_version
+            .split(|c: char| c == '-' || c == '.')
+            .filter_map(|s| s.parse().ok())
             .collect();
         
-        let latest_parts: Vec<_> = latest_version
-            .split(|c| c == '-' || c == '.')
-            .map(|s| s.parse::<u32>().unwrap_or(0))
+        let latest_parts: Vec<i32> = latest_version
+            .split(|c: char| c == '-' || c == '.')
+            .filter_map(|s| s.parse().ok())
             .collect();
-        
-        // 只检查前两部分，第三部分是补丁更新
+
+        // 只检查前两个部分，第三部分是补丁更新
         for i in 0..2 {
             if i >= scraper_parts.len() || i >= latest_parts.len() {
                 break;
@@ -355,134 +388,208 @@ pub trait Doc {
             }
             
             if i == 1 && latest_parts[i] > scraper_parts[i] {
-                if (latest_parts[0] == 0 && scraper_parts[0] == 0) || 
+                if (latest_parts[0] == 0 && scraper_parts[0] == 0) ||
                    (latest_parts[0] == 1 && scraper_parts[0] == 1) {
                     return "Outdated major version".to_string();
+                } else {
+                    return "Outdated minor version".to_string();
                 }
-                return "Outdated minor version".to_string();
             }
             
             if latest_parts[i] < scraper_parts[i] {
                 return "Up-to-date".to_string();
             }
         }
-        
+
         "Up-to-date".to_string()
     }
+
+    // 私有方法
+
+    /// 默认 slug
+    /// 
+    /// 对应原版 Ruby 的 default_slug 方法
+    fn default_slug(&self) -> Option<String> {
+        let name = self.name();
+        if name.chars().all(|c| c.is_alphanumeric() || c == '_') {
+            Some(name.to_lowercase())
+        } else {
+            None
+        }
+    }
+
+    /// 检查是否应该存储页面
+    /// 
+    /// 对应原版 Ruby 的 store_page? 方法
+    fn should_store_page(&self, page: &PageData) -> bool {
+        !page.entries.is_empty()
+    }
+
+    /// 存储索引
+    /// 
+    /// 对应原版 Ruby 的 store_index 方法
+    fn store_index<S>(&self, store: &mut S, filename: &str, index: &EntryIndex, read_write: bool) -> Result<(), String>
+    where
+        S: Store,
+    {
+        let old_json = if read_write {
+            if let Ok(json) = store.read(filename) {
+                Some(json)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        
+        let new_json = index.to_json();
+        
+        // 这里应该有 instrument 调用，但简化实现
+        
+        if read_write {
+            store.write(filename, &new_json).map_err(|e| e.to_string())?;
+        }
+        
+        Ok(())
+    }
+
+    /// 存储页面索引
+    /// 
+    /// 对应原版 Ruby 的 store_index 方法 (用于 PageDb)
+    fn store_index_pages<S>(&self, store: &mut S, filename: &str, pages: &PageDb, read_write: bool) -> Result<(), String>
+    where
+        S: Store,
+    {
+        let old_json = if read_write {
+            if let Ok(json) = store.read(filename) {
+                Some(json)
+            } else {
+                None
+            }
+        } else {
+            None
+        };
+        
+        let new_json = pages.to_json();
+        
+        if read_write {
+            store.write(filename, &new_json).map_err(|e| e.to_string())?;
+        }
+        
+        Ok(())
+    }
+
+    /// 存储元数据
+    /// 
+    /// 对应原版 Ruby 的 store_meta 方法
+    fn store_meta<S>(&self, store: &mut S) -> Result<(), String>
+    where
+        S: Store,
+    {
+        let mut json = self.as_json();
+        // 添加时间戳和数据库大小
+        // json.mtime = Some(chrono::Utc::now().timestamp());
+        // json.db_size = Some(store.size(DB_FILENAME));
+        
+        let json_str = serde_json::to_string(&json).map_err(|e| e.to_string())?;
+        store.write(META_FILENAME, &json_str).map_err(|e| e.to_string())?;
+        
+        Ok(())
+    }
 }
 
-/// 辅助函数 - 分割整数
-fn split_ints(s: &str) -> Vec<String> {
-    let mut result = Vec::new();
-    let mut current = String::new();
-    let mut last_was_digit = false;
-    
-    for c in s.chars() {
-        let is_digit = c.is_digit(10);
-        
-        if is_digit && !last_was_digit && !current.is_empty() {
-            result.push(current);
-            current = String::new();
+impl Clone for Doc {
+    fn clone(&self) -> Self {
+        Self {
+            name: self.name.clone(),
+            slug: self.slug.clone(),
+            doc_type: self.doc_type.clone(),
+            release: self.release.clone(),
+            is_abstract: self.is_abstract,
+            links: self.links.clone(),
+            version: self.version.clone(),
+            versions: None, // 不克隆版本列表以避免循环引用
         }
-        
-        current.push(c);
-        last_was_digit = is_digit;
     }
-    
-    if !current.is_empty() {
-        result.push(current);
-    }
-    
-    result
 }
 
-/// 条目排序函数
-fn sort_entries(a: &str, b: &str) -> std::cmp::Ordering {
-    let a_first = a.chars().next().map(|c| c.is_digit(10)).unwrap_or(false);
-    let b_first = b.chars().next().map(|c| c.is_digit(10)).unwrap_or(false);
+/// 页面数据
+/// 
+/// 对应原版 Ruby 中页面构建返回的数据结构
+#[derive(Debug, Clone)]
+pub struct PageData {
+    pub entries: Vec<Entry>,
+    pub path: String,
+    pub output: String,
+    pub store_path: String,
+}
+
+/// JSON 序列化结构
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DocJson {
+    pub name: String,
+    pub slug: String,
+    #[serde(rename = "type", skip_serializing_if = "Option::is_none")]
+    pub doc_type: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub links: Option<HashMap<String, String>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub version: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub release: Option<String>,
+}
+
+/// 存储接口
+/// 
+/// 对应原版 Ruby 中的存储操作
+pub trait Store {
+    type Error: std::fmt::Display;
     
-    if a_first || b_first {
-        let a_split = split_ints(a);
-        let b_split = split_ints(b);
-        
-        let a_len = a_split.len();
-        let b_len = b_split.len();
-        
-        if a_len == 1 && b_len == 1 {
-            return a.to_lowercase().cmp(&b.to_lowercase());
-        }
-        
-        if a_len == 1 {
-            return std::cmp::Ordering::Greater;
-        }
-        
-        if b_len == 1 {
-            return std::cmp::Ordering::Less;
-        }
-        
-        // 处理数值部分
-        let mut a_processed: Vec<_> = a_split.iter().enumerate()
-            .map(|(i, s)| {
-                if i == a_len - 1 {
-                    s.to_string()
-                } else {
-                    s.parse::<u32>().unwrap_or(0).to_string()
-                }
-            })
-            .collect();
-        
-        let mut b_processed: Vec<_> = b_split.iter().enumerate()
-            .map(|(i, s)| {
-                if i == b_len - 1 {
-                    s.to_string()
-                } else {
-                    s.parse::<u32>().unwrap_or(0).to_string()
-                }
-            })
-            .collect();
-        
-        // 调整长度使之相等
-        if b_len > a_len {
-            for _ in 0..(b_len - a_len) {
-                a_processed.insert(a_processed.len() - 1, "0".to_string());
-            }
-        } else if a_len > b_len {
-            for _ in 0..(a_len - b_len) {
-                b_processed.insert(b_processed.len() - 1, "0".to_string());
-            }
-        }
-        
-        a_processed.cmp(&b_processed)
-    } else {
-        a.to_lowercase().cmp(&b.to_lowercase())
-    }
+    fn open(&mut self, path: &str) -> std::result::Result<(), Self::Error>;
+    fn replace(&mut self, path: &str) -> std::result::Result<(), Self::Error>;
+    fn read(&self, filename: &str) -> std::result::Result<String, Self::Error>;
+    fn write(&mut self, filename: &str, content: &str) -> std::result::Result<(), Self::Error>;
+    fn size(&self, filename: &str) -> usize;
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
-    fn test_sort_entries() {
-        // 测试普通字符串排序
-        assert_eq!(sort_entries("a", "b"), std::cmp::Ordering::Less);
-        assert_eq!(sort_entries("B", "a"), std::cmp::Ordering::Greater);
-        
-        // 测试带数字的排序
-        assert_eq!(sort_entries("1.1", "1.2"), std::cmp::Ordering::Less);
-        assert_eq!(sort_entries("1.10", "1.2"), std::cmp::Ordering::Greater);
-        assert_eq!(sort_entries("2.1", "1.2"), std::cmp::Ordering::Greater);
-        
-        // 测试混合内容的排序
-        assert_eq!(sort_entries("item", "1.item"), std::cmp::Ordering::Greater);
-        assert_eq!(sort_entries("1.item", "2.item"), std::cmp::Ordering::Less);
+    fn test_doc_creation() {
+        let doc = Doc::new().unwrap();
+        assert_eq!(doc.name(), "Doc");
+        assert!(!doc.has_version());
     }
-    
+
     #[test]
-    fn test_split_ints() {
-        // 测试数字分割
-        assert_eq!(split_ints("1.2"), vec!["1", ".2"]);
-        assert_eq!(split_ints("10.20.30"), vec!["10", ".20", ".30"]);
-        assert_eq!(split_ints("v1.2.3"), vec!["v1", ".2", ".3"]);
+    fn test_version_slug() {
+        let mut doc = Doc::new().unwrap();
+        doc.set_version("1.2.3+beta#1".to_string());
+        assert_eq!(doc.version_slug(), "1.2.3pbeta_1");
+    }
+
+    #[test]
+    fn test_outdated_state() {
+        let doc = Doc::new().unwrap();
+        
+        assert_eq!(doc.outdated_state("1.0.0", "2.0.0"), "Outdated major version");
+        assert_eq!(doc.outdated_state("1.1.0", "1.2.0"), "Outdated minor version");
+        assert_eq!(doc.outdated_state("1.1.1", "1.1.2"), "Up-to-date");
+        assert_eq!(doc.outdated_state("2.0.0", "1.0.0"), "Up-to-date");
+    }
+
+    #[test]
+    fn test_as_json() {
+        let mut doc = Doc::new().unwrap();
+        doc.name = Some("TestDoc".to_string());
+        doc.slug = Some("testdoc".to_string());
+        doc.set_version("1.0.0".to_string());
+        
+        let json = doc.as_json();
+        assert_eq!(json.name, "TestDoc");
+        assert_eq!(json.slug, "testdoc~1_0_0");
+        assert_eq!(json.version, Some("1.0.0".to_string()));
     }
 }

@@ -1,0 +1,13 @@
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/libtendril-39b0a7fced7917a8.rmeta: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/fmt.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/stream.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/buf32.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/tendril.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/utf8_decode.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/util.rs
+
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/libtendril-39b0a7fced7917a8.rlib: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/fmt.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/stream.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/buf32.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/tendril.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/utf8_decode.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/util.rs
+
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/tendril-39b0a7fced7917a8.d: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/fmt.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/stream.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/buf32.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/tendril.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/utf8_decode.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/util.rs
+
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/lib.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/fmt.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/stream.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/buf32.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/tendril.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/utf8_decode.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/tendril-0.4.3/src/util.rs:

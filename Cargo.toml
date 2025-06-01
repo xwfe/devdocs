@@ -7,71 +7,142 @@ description = "A Rust implementation of DevDocs API Documentation Browser (xwdoc
 readme = "README.md"
 license = "MIT"
 
-[dependencies]
-# HTTP client for the scraper
-reqwest = { version = "0.11", features = ["json", "blocking"] }
+[features]
+default = ["compression", "templates"]
+simd = ["simd-json"]
+compression = ["flate2", "tar"]
+templates = ["tera", "handlebars"]
+xpath = ["xpath_reader", "roxmltree"]
+cache = ["rusqlite", "sled"]
 
-# HTML parsing
+[dependencies]
+# 核心 HTTP 客户端 - 对应原版 Typhoeus
+reqwest = { version = "0.11", features = ["json", "gzip", "brotli", "stream", "blocking"] }
+
+# HTML 解析 - 对应原版 Nokogiri
+nipper = "0.1.9"  # 使用 nipper 进行 HTML 解析
+kuchiki = "0.8"
 html5ever = "0.26"
 markup5ever_rcdom = "0.2.0"
-markup5ever_arcdom = "0.1.1"
-kuchiki = "0.8"
 
-# Web server for the app
-axum = "0.6"
+# XPath 支持 (可选) - 补充 scraper 缺失功能
+xpath_reader = { version = "0.4", optional = true }
+roxmltree = { version = "0.18", optional = true }
+
+# Web 服务器 - 对应原版 Rails/Sinatra
+axum = { version = "0.7", features = ["macros", "tower-log"] }
+tower = "0.4"
+tower-http = { version = "0.5", features = ["fs", "cors", "compression-gzip"] }
+
+# 异步运行时 - Rust 特有
 tokio = { version = "1", features = ["full"] }
+futures = "0.3"
+futures-util = "0.3"
+async-trait = "0.1"
 
-# Serialization/deserialization
+# JSON 处理 - 对应原版 JSON
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+simd-json = { version = "0.13", optional = true }
 
-# Command line interface
-clap = { version = "4.3", features = ["derive"] }
+# 模板引擎 - 补充 Web 功能
+tera = { version = "1.19", optional = true }
+handlebars = { version = "4.4", optional = true }
 
-# Logging
-log = "0.4"
+# 命令行界面 - 对应原版 OptionParser
+clap = { version = "4.4", features = ["derive", "color"] }
+
+# 日志系统 - 现代化日志
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 env_logger = "0.10"
+log = "0.4"
 
-# Error handling
+# 错误处理 - Rust 最佳实践
 thiserror = "1.0"
 anyhow = "1.0"
 
-# File system operations
-walkdir = "2.3"
+# 字符串处理 - 对应 ActiveSupport 部分功能
+regex = "1.10"
+heck = "0.4"
+once_cell = "1.19"
+lazy_static = "1.4"
 
-# Compression
-flate2 = "1.0"
+# 时间处理 - 对应 ActiveSupport 时间功能
+chrono = { version = "0.4", features = ["serde"] }
 
-# Regular expressions
-regex = "1.9"
-scraper = "0.23.1"
+# 文件系统操作 - 对应原版文件操作
+walkdir = "2.4"
+globset = "0.4"
+
+# 压缩支持 (可选)
+flate2 = { version = "1.0", optional = true }
+tar = { version = "0.4", optional = true }
+
+# URL 处理
 url = "2.4"
-lazy_static = "1.4.0"
-base64 = "0.22.1"
 
-# Terminal output formatting
-termcolor = "1.2"
-term_size = "0.3"
+# 配置管理
+config = "0.14"
+toml = "0.8"
+
+# 终端输出和系统检测
 atty = "0.2"
+term_size = "0.3"
 textwrap = "0.16"
-chrono = "0.4"
 
-# Async operations
-futures = "0.3"
+# 图像处理
+image = "0.24"
+mime_guess = "2.0"
 
-# Image processing
-image = "0.25.6"
+# 性能优化
+ahash = "0.8"
+compact_str = "0.7"
 
-# Async trait support
-async-trait = "0.1"
+# 数据库支持 (可选)
+rusqlite = { version = "0.30", optional = true, features = ["bundled"] }
+sled = { version = "0.34", optional = true }
 
-# Futures utilities
-futures-util = "0.3"
+# 终端输出格式化
+termcolor = "1.3"
+console = "0.15"
+indicatif = "0.17"
 
-# 日期时间处理
+# Base64 编码
+base64 = "0.21"
+
+# 测试工具
+
+[build-dependencies]
 chrono = "0.4"
 
 [dev-dependencies]
-mockito = "1.0"
-test-case = "3.1"
+mockito = "1.2"
+test-case = "3.3"
 tempfile = "3.8"
+tokio-test = "0.4"
+criterion = "0.5"
+
+# 性能基准测试 (暂时注释，待实现)
+# [[bench]]
+# name = "scraper_bench"
+# harness = false
+
+# [[bench]]
+# name = "filter_bench"
+# harness = false
+
+# 优化配置
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+debug = true
+opt-level = 0
+
+[profile.bench]
+debug = true
+lto = "thin"

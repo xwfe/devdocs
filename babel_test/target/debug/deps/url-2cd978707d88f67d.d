@@ -1,0 +1,13 @@
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/liburl-2cd978707d88f67d.rmeta: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/host.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/origin.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/parser.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/path_segments.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/slicing.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/quirks.rs
+
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/liburl-2cd978707d88f67d.rlib: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/host.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/origin.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/parser.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/path_segments.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/slicing.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/quirks.rs
+
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/url-2cd978707d88f67d.d: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/host.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/origin.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/parser.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/path_segments.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/slicing.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/quirks.rs
+
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/lib.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/host.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/origin.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/parser.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/path_segments.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/slicing.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/url-2.5.4/src/quirks.rs:

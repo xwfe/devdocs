@@ -1,0 +1,13 @@
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/libquote-fe52aca91fe5d72e.rmeta: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/ext.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/format.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/ident_fragment.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/to_tokens.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/runtime.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/spanned.rs
+
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/libquote-fe52aca91fe5d72e.rlib: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/ext.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/format.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/ident_fragment.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/to_tokens.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/runtime.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/spanned.rs
+
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/quote-fe52aca91fe5d72e.d: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/ext.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/format.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/ident_fragment.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/to_tokens.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/runtime.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/spanned.rs
+
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/lib.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/ext.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/format.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/ident_fragment.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/to_tokens.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/runtime.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/quote-1.0.40/src/spanned.rs:

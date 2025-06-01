@@ -1,0 +1,10 @@
+[package]
+name = "babel_test"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+nipper = "0.1.9"
+reqwest = { version = "0.11", features = ["blocking"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"

@@ -80,7 +80,7 @@ impl ConsoleSubscriber {
     fn format_path(&self, path: &str) -> String {
         // 获取当前目录
         if let Ok(current_dir) = std::env::current_dir() {
-            if let Ok(current_path) = current_dir.to_str() {
+            if let Some(current_path) = current_dir.to_str() {
                 return path.replace(current_path, "");
             }
         }

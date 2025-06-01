@@ -6,6 +6,7 @@ use crate::core::config::Config;
 use super::handlers;
 use std::sync::Arc;
 use super::handlers::AppState;
+use crate::docs::registry::DocRegistry;
 
 /// u521bu5efau6240u6709u5e94u7528u7a0bu5e8fu8defu7531
 pub fn create_routes(_config: &Config) -> Router {
@@ -18,6 +19,6 @@ pub fn create_routes(_config: &Config) -> Router {
         .route("/docs/:doc/*page", get(handlers::doc_page))
         .with_state(Arc::new(AppState {
             config: _config.clone(),
-            doc_registry: Arc::new(crate::docs::DocRegistry::new()),
+            doc_registry: Arc::new(DocRegistry::new()),
         }))
 }

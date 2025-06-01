@@ -88,24 +88,24 @@ where
 {
     let start_time = Instant::now();
 
-    let info = InstrumentInfo {
+    let initial_info = InstrumentInfo {
         name: name.to_string(),
         start_time,
         duration: None,
-        payload,
+        payload: payload.clone(),
     };
 
     let result = action();
 
     let duration = start_time.elapsed();
-    let info = InstrumentInfo {
+    let final_info = InstrumentInfo {
         name: name.to_string(),
         start_time,
         duration: Some(duration),
         payload,
     };
-
-    NOTIFICATION_CENTER.publish(&info);
+    
+    NOTIFICATION_CENTER.publish(&final_info);
 
     result
 }

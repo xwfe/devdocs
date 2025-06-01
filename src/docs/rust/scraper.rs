@@ -1,8 +1,7 @@
 //! Rust 文档抓取器
 
 use crate::core::error::Result;
-use crate::core::filters::{HtmlCleanerFilter, UrlNormalizerFilter};
-use crate::core::scraper::{Scraper as CoreScraper, UrlScraper};
+use crate::core::scraper::base::{Scraper, UrlScraper};
 use async_trait::async_trait;
 
 /// Rust文档抓取器
@@ -26,27 +25,15 @@ impl RustScraper {
             "rustc/index.html".to_string(),
         ];
 
-        // 创建过滤器
-        let html_cleaner = Box::new(
-            HtmlCleanerFilter::new()
-                .with_remove_tag("footer")
-                .with_remove_tag("nav")
-                .with_remove_attr("data-*"),
-        );
-        let url_normalizer = Box::new(UrlNormalizerFilter::new(base_url, "/docs/rust/"));
-
-        // 添加过滤器和初始路径
-        scraper = scraper
-            .with_initial_paths(initial_paths)
-            .with_filter(html_cleaner)
-            .with_filter(url_normalizer);
+        // 添加初始路径
+        scraper = scraper.with_initial_paths(initial_paths);
 
         Self { scraper }
     }
 }
 
 #[async_trait]
-impl CoreScraper for RustScraper {
+impl Scraper for RustScraper {
     fn name(&self) -> &str {
         self.scraper.name()
     }

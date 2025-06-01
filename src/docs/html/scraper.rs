@@ -4,9 +4,8 @@
 //! 参考文件: lib/docs/scrapers/mdn/html.rb
 
 use crate::core::error::Result;
-use crate::core::scraper::{Scraper as CoreScraper, UrlScraper};
+use crate::core::scraper::base::{Scraper, UrlScraper};
 use crate::docs::html::HtmlEntriesFilter;
-use crate::core::filters::{HtmlCleanerFilter, UrlNormalizerFilter};
 use async_trait::async_trait;
 
 /// HTML文档爬虫
@@ -28,19 +27,12 @@ impl HtmlScraper {
             "/Global_attributes".to_string(),
         ];
 
-        // 过滤器：
-        // 1. 清理无用标签
-        let html_cleaner = Box::new(HtmlCleanerFilter::new());
-        // 2. 只允许页面和图片链接
+        // 添加过滤器
         let html_entries = Box::new(HtmlEntriesFilter::new());
-        // 3. 规范化链接
-        let url_normalizer = Box::new(UrlNormalizerFilter::new(base_url, "/docs/html/"));
 
         // 组合过滤器和初始路径
         scraper = scraper
             .with_initial_paths(initial_paths)
-            .with_filter(html_cleaner)
-            .with_filter(url_normalizer)
             .with_filter(html_entries);
 
         Self { scraper }
@@ -48,7 +40,7 @@ impl HtmlScraper {
 }
 
 #[async_trait]
-impl CoreScraper for HtmlScraper {
+impl Scraper for HtmlScraper {
     fn name(&self) -> &str {
         self.scraper.name()
     }

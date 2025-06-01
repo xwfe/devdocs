@@ -1,0 +1,11 @@
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/libfutures_channel-99515f1de8c0650f.rmeta: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/lock.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/mpsc/mod.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/mpsc/queue.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/oneshot.rs
+
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/libfutures_channel-99515f1de8c0650f.rlib: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/lock.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/mpsc/mod.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/mpsc/queue.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/oneshot.rs
+
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/futures_channel-99515f1de8c0650f.d: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/lock.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/mpsc/mod.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/mpsc/queue.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/oneshot.rs
+
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/lib.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/lock.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/mpsc/mod.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/mpsc/queue.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/futures-channel-0.3.31/src/oneshot.rs:

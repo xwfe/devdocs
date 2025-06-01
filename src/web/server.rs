@@ -4,6 +4,7 @@ use crate::core::config::Config;
 use axum::Router;
 use std::error::Error;
 use std::net::SocketAddr;
+use tokio::net::TcpListener;
 
 /// Web u670du52a1u5668
 pub struct Server {
@@ -42,8 +43,10 @@ impl Server {
 
         println!("Server starting at http://{}", self.address);
 
-        axum::Server::bind(&self.address)
-            .serve(router.into_make_service())
+        let listener = TcpListener::bind(&self.address).await
+            .map_err(|e| Box::new(e) as Box<dyn Error>)?;
+        
+        axum::serve(listener, router.into_make_service())
             .await
             .map_err(|e| Box::new(e) as Box<dyn Error>)
     }

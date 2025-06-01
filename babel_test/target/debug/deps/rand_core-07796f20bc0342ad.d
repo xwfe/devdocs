@@ -1,0 +1,12 @@
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/librand_core-07796f20bc0342ad.rmeta: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/error.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/block.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/impls.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/le.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/os.rs
+
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/librand_core-07796f20bc0342ad.rlib: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/error.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/block.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/impls.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/le.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/os.rs
+
+/Users/bing/Projects/devdocs_rust/babel_test/target/debug/deps/rand_core-07796f20bc0342ad.d: /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/lib.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/error.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/block.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/impls.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/le.rs /Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/os.rs
+
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/lib.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/error.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/block.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/impls.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/le.rs:
+/Users/bing/.cargo/registry/src/rsproxy.cn-e3de039b2554c837/rand_core-0.5.1/src/os.rs:
