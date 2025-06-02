@@ -16,6 +16,7 @@ pub mod html;
 pub mod javascript;
 pub mod rust;
 pub mod typescript;
+pub mod angular;
 
 // 重新导出
 pub use documentation::Documentation;
@@ -35,8 +36,10 @@ pub use crate::{create_entries_filter, create_filter, register_doc};
 pub fn init() -> crate::core::error::Result<()> {
     // 注册具体文档
     babel::register();
-    
-    // 可以在这里添加更多文档的注册
+    javascript::register();
+    typescript::register();
+    angular::register();
+
     
     // 注册所有抓取器
     register_all_scrapers()?;
