@@ -122,6 +122,11 @@ impl DocRegistry {
         self.scrapers.get(name)
     }
 
+    /// 获取所有已注册的抓取器名称
+    pub fn get_scraper_names(&self) -> Vec<String> {
+        self.scrapers.keys().cloned().collect()
+    }
+
     /// 加载所有文档从磁盘
     pub fn load_from_disk(&mut self, path: &str) -> Result<()> {
         use std::fs;
@@ -326,6 +331,12 @@ pub fn register_scraper<S: ScraperTrait + 'static>(name: &str, scraper: S) {
 pub fn get_scraper(name: &str) -> Option<Box<dyn ScraperTrait>> {
     let registry = DOC_REGISTRY.lock().unwrap();
     registry.get_scraper(name).map(|s| s.box_clone())
+}
+
+/// 获取所有已注册的抓取器名称
+pub fn get_scraper_names() -> Vec<String> {
+    let registry = DOC_REGISTRY.lock().unwrap();
+    registry.get_scraper_names()
 }
 
 /// 加载所有文档从磁盘
